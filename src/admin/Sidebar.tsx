@@ -28,6 +28,12 @@ export const Sidebar = () => {
     </svg>
   );
 
+  const CategoriesIcon = (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+      <path fillRule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A1 1 0 019.293 9H17a1 1 0 011 1zm-7.707-7a1 1 0 011.414 0l7 7a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L3.707 10.707a1 1 0 01-1.414-1.414l7-7z" clipRule="evenodd" />
+    </svg>
+  );
+
   const OrdersIcon = (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
       <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
@@ -35,17 +41,11 @@ export const Sidebar = () => {
     </svg>
   );
 
-  const MessagesIcon = (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-      <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" />
-    </svg>
-  );
-
   const sidebarLinks: SidebarLink[] = [
     { id: 1, path: "/admin-dashboard", name: "Dashboard", icon: DashboardIcon },
     { id: 2, path: "/admin-dashboard/products", name: "Products", icon: ProductsIcon },
-    { id: 3, path: "/admin-dashboard/orders", name: "Orders", icon: OrdersIcon },
-    { id: 4, path: "/admin-dashboard/messages", name: "Messages", icon: MessagesIcon },
+    { id: 3, path: "/admin-dashboard/categories", name: "Categories", icon: CategoriesIcon },
+    { id: 4, path: "/admin-dashboard/orders", name: "Orders", icon: OrdersIcon },
   ];
 
   return (
