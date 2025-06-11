@@ -2,7 +2,7 @@ import axios from 'axios';
 import API_BASE_URL from "../config/api";
 import type { ICategory } from "../types/Category";
 
-// type for the category data 
+// type for the category data
 interface CategoryFormData {
   name: string;
   description?: string;
@@ -75,3 +75,14 @@ export const deleteCategory = async (id: string): Promise<void> => {
     throw new Error('Failed to delete category');
   }
 };
+
+// Default export object with all methods
+const categoryService = {
+  getAllCategories,
+  getCategoryById,
+  createCategory,
+  updateCategory,
+  deleteCategory
+};
+
+export default categoryService;

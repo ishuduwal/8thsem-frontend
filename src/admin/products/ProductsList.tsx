@@ -1,4 +1,3 @@
-// admin/product/ProductsList.tsx
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -229,17 +228,23 @@ const ProductsList = () => {
         </>
       )}
 
-      {/* Delete Confirmation Modal */}
-      <ConfirmationModal
-        isOpen={deleteModal.isOpen}
-        title="Delete Product"
-        message={`Are you sure you want to delete "${deleteModal.productTitle}"? This action cannot be undone.`}
-        confirmText="Delete"
-        cancelText="Cancel"
-        onConfirm={handleDeleteConfirm}
-        onCancel={handleDeleteCancel}
-        type="danger"
-      />
+<ConfirmationModal
+  isOpen={deleteModal.isOpen}
+  title="Delete Product"
+  message={
+    <>
+      Are you sure you want to delete{" "}
+      <span className="font-semibold">"{deleteModal.productTitle}"</span>? This action cannot be undone.
+    </>
+  }
+  confirmText="Delete"
+  cancelText="Cancel"
+  onConfirm={handleDeleteConfirm}
+  onCancel={handleDeleteCancel}
+  onClose={handleDeleteCancel}
+  type="danger"
+/>
+
     </div>
   );
 };

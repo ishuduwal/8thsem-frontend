@@ -7,6 +7,8 @@ import { Dashboard } from "./admin/Dashboard";
 import CategoriesList from "./admin/category/CategoriesList";
 import CreateCategory from "./admin/category/CreateCategory";
 import EditCategory from "./admin/category/EditCategory";
+import ProductsList from "./admin/products/ProductsList";
+import DiscountsList from "./admin/discount/DiscountsList";
 
 function App() {
   return (
@@ -19,6 +21,8 @@ function App() {
               <Route path="categories" element={<CategoriesList />} />
               <Route path="categories/new" element={<CreateCategory />} />
               <Route path="categories/edit/:id" element={<EditCategory />} />
+              <Route path="products" element={<ProductsList />} />
+              <Route path="discounts" element={<DiscountsList />} />
               {/* Add other routes here */}
             </Route>
           </Routes>

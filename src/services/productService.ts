@@ -2,7 +2,7 @@ import API_BASE_URL from "../config/api";
 import type { Product, ProductResponse } from "../types/Product";
 
 class ProductService {
-    private baseURL = `${API_BASE_URL}/products`;
+    private baseURL = `${API_BASE_URL}/product`;
   
     async createProduct(productData: Omit<Product, '_id' | 'createdAt' | 'updatedAt'>): Promise<ProductResponse> {
       try {
