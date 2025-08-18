@@ -7,8 +7,12 @@ import { Dashboard } from "./admin/Dashboard";
 import CategoriesList from "./admin/category/CategoriesList";
 import CreateCategory from "./admin/category/CreateCategory";
 import EditCategory from "./admin/category/EditCategory";
-import ProductsList from "./admin/products/ProductsList";
 import DiscountsList from "./admin/discount/DiscountsList";
+import MainLayout from "./components/MainLayout";
+import { Home } from "./components/home/Home";
+import ProductList from "./admin/products/ProductList";
+import EditProduct from "./admin/products/EditProduct";
+import CreateProduct from "./admin/products/CreateProduct";
 
 function App() {
   return (
@@ -21,10 +25,16 @@ function App() {
               <Route path="categories" element={<CategoriesList />} />
               <Route path="categories/new" element={<CreateCategory />} />
               <Route path="categories/edit/:id" element={<EditCategory />} />
-              <Route path="products" element={<ProductsList />} />
+              <Route path="products" element={<ProductList />} />
+              <Route path="products/edit/:id" element={<EditProduct />} />
+              <Route path="product/new" element={<CreateProduct />} />
               <Route path="discounts" element={<DiscountsList />} />
-              {/* Add other routes here */}
+              {/*other routes here */}
             </Route>
+            <Route path="/" element={<MainLayout />}>
+            <Route index element={<Home />} />
+            {/*  other public routes here */}
+          </Route>
           </Routes>
         </Router>
         <ToastContainer

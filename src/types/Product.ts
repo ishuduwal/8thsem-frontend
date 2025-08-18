@@ -1,12 +1,12 @@
 export interface Product {
     _id?: string;
-    title: string;
+    name: string;
     description: string;
     originalPrice: number;
     price: number;
     category: string | { _id: string; name: string };
     mainImage: string;
-    additionalImages: string[];
+    subImages: string[]; 
     createdAt?: Date;
     updatedAt?: Date;
   }
