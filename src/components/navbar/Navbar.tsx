@@ -11,7 +11,7 @@ export const Navbar = () => {
   };
 
   return (
-    <nav className="bg-[#131921] text-white shadow-lg sticky top-0 z-50">
+    <nav className="bg-[#222222] text-white shadow-lg sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 py-1 sm:px-6 lg:px-8">
         <div className="flex items-center h-16 justify-between">
           <div className="flex items-center">
@@ -52,7 +52,7 @@ export const Navbar = () => {
                 <span className="relative inline-flex rounded-full h-3 w-3 bg-purple-500"></span>
               </span>
             </Link>
-            <Link to="/account" className="text-white hover:text-gray-300 transition-colors duration-200">
+            <Link to="/login" className="text-white hover:text-gray-300 transition-colors duration-200">
               <User size={24} />
             </Link>
           </div>

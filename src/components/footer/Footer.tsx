@@ -1,43 +1,10 @@
 import { Link } from 'react-router-dom';
-import { Facebook, Twitter, Instagram, Linkedin, CreditCard, Shield, Truck, Phone } from 'lucide-react';
+import { Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
 
 export const Footer = () => {
   return (
-    <footer className="bg-gray-900 text-white pt-12 pb-2">
+    <footer className="bg-[#222222] text-white pt-12 pb-2">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
-          <div className="flex items-center p-4 bg-gray-800 rounded-lg">
-            <Truck className="text-purple-500 mr-4" size={32} />
-            <div>
-              <h3 className="font-bold">Free Shipping</h3>
-              <p className="text-sm text-gray-400">On orders over $50</p>
-            </div>
-          </div>
-          
-          <div className="flex items-center p-4 bg-gray-800 rounded-lg">
-            <CreditCard className="text-purple-500 mr-4" size={32} />
-            <div>
-              <h3 className="font-bold">Secure Payment</h3>
-              <p className="text-sm text-gray-400">100% secure checkout</p>
-            </div>
-          </div>
-          
-          <div className="flex items-center p-4 bg-gray-800 rounded-lg">
-            <Shield className="text-purple-500 mr-4" size={32} />
-            <div>
-              <h3 className="font-bold">Quality Guarantee</h3>
-              <p className="text-sm text-gray-400">Authentic products</p>
-            </div>
-          </div>
-          
-          <div className="flex items-center p-4 bg-gray-800 rounded-lg">
-            <Phone className="text-purple-500 mr-4" size={32} />
-            <div>
-              <h3 className="font-bold">24/7 Support</h3>
-              <p className="text-sm text-gray-400">Dedicated support</p>
-            </div>
-          </div>
-        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
           <div>
@@ -94,7 +61,7 @@ export const Footer = () => {
                 placeholder="Your email address"
                 className="px-4 py-2 w-full rounded-l text-gray-800 focus:outline-none"
               />
-              <button className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-r transition-colors">
+              <button className="bg-[#454444] px-4 py-2 rounded-r transition-colors">
                 Subscribe
               </button>
             </div>

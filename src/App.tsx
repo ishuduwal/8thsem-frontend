@@ -13,6 +13,14 @@ import { Home } from "./components/home/Home";
 import ProductList from "./admin/products/ProductList";
 import EditProduct from "./admin/products/EditProduct";
 import CreateProduct from "./admin/products/CreateProduct";
+import Login from "./components/login/Login";
+import Signup from "./components/signup/Signup";
+import AuthLayout from "./components/AuthLayout";
+import { Product } from "./components/product/Product";
+import { ProductDetail } from "./components/product/ProductDetail";
+import ForgotPassword from "./components/auth/ForgotPassword";
+import ResetPasswordOTP from "./components/auth/ResetPasswordOTP";
+import './App.css'
 
 function App() {
   return (
@@ -27,14 +35,23 @@ function App() {
               <Route path="categories/edit/:id" element={<EditCategory />} />
               <Route path="products" element={<ProductList />} />
               <Route path="products/edit/:id" element={<EditProduct />} />
-              <Route path="product/new" element={<CreateProduct />} />
+              <Route path="products/create" element={<CreateProduct />} />
               <Route path="discounts" element={<DiscountsList />} />
               {/*other routes here */}
             </Route>
             <Route path="/" element={<MainLayout />}>
-            <Route index element={<Home />} />
-            {/*  other public routes here */}
-          </Route>
+              <Route index element={<Home />} />
+              <Route path="/products" element={<Product />} />
+              <Route path="/products/:id" element={<ProductDetail />} />
+              {/*  other public routes here */}
+            </Route>
+            {/* Auth Routes  */}
+            <Route path="/" element={<AuthLayout />}>
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password-otp" element={<ResetPasswordOTP />} />
+            </Route>
           </Routes>
         </Router>
         <ToastContainer
