@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Plus, Edit, Trash2, Loader2, X, Image as ImageIcon, ChevronDown } from 'lucide-react';
 import { toast } from 'react-toastify';
-import type { Product } from '../../types/Product';
 import { ConfirmationModal } from '../../components/ConfirmationModal';
 import { getAllCategories } from '../../services/categoryService';
 import type { ICategory } from '../../types/Category';
