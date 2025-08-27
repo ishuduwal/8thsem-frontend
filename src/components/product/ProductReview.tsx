@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import type { ProductReviews } from '../../types/Review';
 import productService from '../../services/productService';
 import { StarRating } from '../StarRating';
-import { getCurrentUser, isAuthenticated } from '../../utils/jwtUtlis'; 
+import { getCurrentUser, isAuthenticated } from '../../utils/jwtUtlis';
 
 interface ProductReviewsProps {
   productId: string;
@@ -47,7 +47,7 @@ export const ProductReview = ({ productId }: ProductReviewsProps) => {
 
   const handleAddRating = async () => {
     if (!requireAuth()) return;
-    
+
     if (newRating < 1 || newRating > 5) {
       setError('Rating must be between 1 and 5');
       return;
@@ -60,7 +60,7 @@ export const ProductReview = ({ productId }: ProductReviewsProps) => {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to add rating';
       setError(errorMessage);
-      
+
       // If it's an authentication error, redirect to login
       if (errorMessage.includes('not authenticated') || errorMessage.includes('User and rating value are required')) {
         navigate('/login', { state: { from: window.location.pathname } });
@@ -70,7 +70,7 @@ export const ProductReview = ({ productId }: ProductReviewsProps) => {
 
   const handleAddComment = async () => {
     if (!requireAuth()) return;
-    
+
     if (!newComment.trim()) {
       setError('Comment cannot be empty');
       return;
@@ -83,7 +83,7 @@ export const ProductReview = ({ productId }: ProductReviewsProps) => {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to add comment';
       setError(errorMessage);
-      
+
       // If it's an authentication error, redirect to login
       if (errorMessage.includes('not authenticated') || errorMessage.includes('User and text are required')) {
         navigate('/login', { state: { from: window.location.pathname } });
@@ -93,7 +93,7 @@ export const ProductReview = ({ productId }: ProductReviewsProps) => {
 
   const handleAddReply = async (commentId: string) => {
     if (!requireAuth()) return;
-    
+
     if (!replyText.trim()) {
       setError('Reply cannot be empty');
       return;
@@ -107,7 +107,7 @@ export const ProductReview = ({ productId }: ProductReviewsProps) => {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to add reply';
       setError(errorMessage);
-      
+
       // If it's an authentication error, redirect to login
       if (errorMessage.includes('not authenticated') || errorMessage.includes('User and text are required')) {
         navigate('/login', { state: { from: window.location.pathname } });
@@ -117,14 +117,14 @@ export const ProductReview = ({ productId }: ProductReviewsProps) => {
 
   const handleLikeComment = async (commentId: string) => {
     if (!requireAuth()) return;
-    
+
     try {
       await productService.likeComment(productId, commentId);
       fetchReviews();
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to like comment';
       setError(errorMessage);
-      
+
       // If it's an authentication error, redirect to login
       if (errorMessage.includes('not authenticated')) {
         navigate('/login', { state: { from: window.location.pathname } });
@@ -134,14 +134,14 @@ export const ProductReview = ({ productId }: ProductReviewsProps) => {
 
   const handleLikeReply = async (commentId: string, replyId: string) => {
     if (!requireAuth()) return;
-    
+
     try {
       await productService.likeReply(productId, commentId, replyId);
       fetchReviews();
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to like reply';
       setError(errorMessage);
-      
+
       // If it's an authentication error, redirect to login
       if (errorMessage.includes('not authenticated')) {
         navigate('/login', { state: { from: window.location.pathname } });
@@ -151,14 +151,14 @@ export const ProductReview = ({ productId }: ProductReviewsProps) => {
 
   const handleDeleteComment = async (commentId: string) => {
     if (!requireAuth()) return;
-    
+
     try {
       await productService.deleteComment(productId, commentId);
       fetchReviews();
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to delete comment';
       setError(errorMessage);
-      
+
       // If it's an authentication error, redirect to login
       if (errorMessage.includes('not authenticated')) {
         navigate('/login', { state: { from: window.location.pathname } });
@@ -168,14 +168,14 @@ export const ProductReview = ({ productId }: ProductReviewsProps) => {
 
   const handleDeleteReply = async (commentId: string, replyId: string) => {
     if (!requireAuth()) return;
-    
+
     try {
       await productService.deleteReply(productId, commentId, replyId);
       fetchReviews();
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to delete reply';
       setError(errorMessage);
-      
+
       // If it's an authentication error, redirect to login
       if (errorMessage.includes('not authenticated')) {
         navigate('/login', { state: { from: window.location.pathname } });
@@ -354,12 +354,21 @@ export const ProductReview = ({ productId }: ProductReviewsProps) => {
               <div className="ml-6 mt-3 space-y-3">
                 {comment.replies.map((reply) => (
                   <div key={reply._id} className="bg-gray-50 p-3 rounded">
-                    <div className="flex justify-between items-start mb-1">
-                      <h5 className="font-medium text-sm">{reply.user || 'Unknown User'}</h5>
+                    <div className="flex justify-between items-center mb-1">
+                      {/* Left side: avatar + username */}
+                      <div className="flex items-center gap-1">
+                        <div className="flex-shrink-0 h-6 w-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                          {reply.user?.charAt(0)?.toUpperCase() || 'U'}
+                        </div>
+                        <h4 className="font-semibold">{reply.user || 'Unknown User'}</h4>
+                      </div>
+
+                      {/* Right side: date */}
                       <span className="text-xs text-gray-500">
                         {new Date(reply.createdAt).toLocaleDateString()}
                       </span>
                     </div>
+
                     <p className="text-sm text-gray-700 mb-2">{reply.text}</p>
                     {authenticated && (
                       <div className="flex items-center space-x-3">

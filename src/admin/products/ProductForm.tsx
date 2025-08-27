@@ -15,7 +15,7 @@ interface FormValues {
   name: string;
   description: string;
   price: string;
-  originalPrice: string;
+  stock: string;
   category: string;
   mainImage: File | null;
   additionalImages: File[];
@@ -33,7 +33,7 @@ const ProductForm = ({ isEdit = false }: ProductFormProps) => {
     name: '',
     description: '',
     price: '',
-    originalPrice: '',
+    stock: '0',
     category: '',
     mainImage: null,
     additionalImages: [],
@@ -76,7 +76,7 @@ const ProductForm = ({ isEdit = false }: ProductFormProps) => {
             name: product.name,
             description: product.description || '',
             price: product.price.toString(),
-            originalPrice: product.originalPrice?.toString() || '',
+            stock: product.stock?.toString() || '0',
             category: typeof product.category === 'object'
               ? product.category._id
               : product.category || '',
@@ -86,7 +86,7 @@ const ProductForm = ({ isEdit = false }: ProductFormProps) => {
 
           setPreviewImages({
             mainImage: product.mainImage || '',
-            additionalImages: product.subImages || [], 
+            additionalImages: product.subImages || [],
           });
         } catch (error) {
           console.error('Error fetching product:', error);
@@ -124,17 +124,30 @@ const ProductForm = ({ isEdit = false }: ProductFormProps) => {
   const handleAdditionalImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const files = Array.from(e.target.files);
-      setFormValues(prev => ({ ...prev, additionalImages: files }));
 
+      // Check if adding these files would exceed the limit
+      const currentCount = formValues.additionalImages.length;
+      const newFiles = files.slice(0, 3 - currentCount); // Only take what fits
+
+      if (newFiles.length === 0) {
+        toast.error('You can only upload up to 3 additional images');
+        return;
+      }
+
+      // Append new files to existing ones
+      const updatedFiles = [...formValues.additionalImages, ...newFiles];
+      setFormValues(prev => ({ ...prev, additionalImages: updatedFiles }));
+
+      // Create previews for new files only
       const newPreviewImages: string[] = [];
-      files.forEach(file => {
+      newFiles.forEach(file => {
         const reader = new FileReader();
         reader.onloadend = () => {
           newPreviewImages.push(reader.result as string);
-          if (newPreviewImages.length === files.length) {
+          if (newPreviewImages.length === newFiles.length) {
             setPreviewImages(prev => ({
               ...prev,
-              additionalImages: newPreviewImages,
+              additionalImages: [...prev.additionalImages, ...newPreviewImages],
             }));
           }
         };
@@ -163,9 +176,12 @@ const ProductForm = ({ isEdit = false }: ProductFormProps) => {
     if (!formValues.name.trim()) newErrors.name = 'Product name is required';
     if (!formValues.description.trim()) newErrors.description = 'Description is required';
     if (!formValues.price) newErrors.price = 'Price is required';
-    if (isNaN(Number(formValues.price))) newErrors.price = 'Price must be a number';
+    if (isNaN(Number(formValues.price)) || Number(formValues.price) <= 0)
+      newErrors.price = 'Price must be a positive number';
     if (!formValues.category) newErrors.category = 'Category is required';
     if (!isEdit && !formValues.mainImage) newErrors.mainImage = 'Main image is required';
+    if (isNaN(Number(formValues.stock)) || Number(formValues.stock) < 0)
+      newErrors.stock = 'Stock must be a non-negative number';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -176,16 +192,20 @@ const ProductForm = ({ isEdit = false }: ProductFormProps) => {
     formData.append('name', formValues.name);
     formData.append('description', formValues.description);
     formData.append('price', formValues.price);
-    if (formValues.originalPrice) {
-      formData.append('originalPrice', formValues.originalPrice);
-    }
     formData.append('category', formValues.category);
+
+    // Add stock with a default value (you might want to add this field to your form)
+    formData.append('stock', '0');
+
     if (formValues.mainImage) {
       formData.append('mainImage', formValues.mainImage);
     }
+
+    // Use 'subImages' instead of 'additionalImages' to match backend
     formValues.additionalImages.forEach((file) => {
-      formData.append('additionalImages', file);
+      formData.append('subImages', file);
     });
+
     return formData;
   };
 
@@ -303,21 +323,22 @@ const ProductForm = ({ isEdit = false }: ProductFormProps) => {
             />
             {errors.price && <p className="mt-1 text-sm text-red-500">{errors.price}</p>}
           </div>
-
           <div>
-            <label htmlFor="originalPrice" className="block text-sm font-medium text-gray-700 mb-1">
-              Original Price (optional)
+            <label htmlFor="stock" className="block text-sm font-medium text-gray-700 mb-1">
+              Stock
             </label>
             <input
-              type="text"
-              id="originalPrice"
-              name="originalPrice"
-              value={formValues.originalPrice}
+              type="number"
+              id="stock"
+              name="stock"
+              value={formValues.stock}
               onChange={handleChange}
+              min="0"
               className="w-full px-3 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
               disabled={isLoading}
             />
           </div>
+
         </div>
 
         <div>
@@ -408,9 +429,9 @@ const ProductForm = ({ isEdit = false }: ProductFormProps) => {
               accept="image/*"
               multiple
               className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-sm file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-              disabled={isLoading || previewImages.additionalImages.length >= 6}
+              disabled={isLoading || previewImages.additionalImages.length >= 3}
             />
-            <p className="mt-1 text-xs text-gray-500">You can upload up to 6 additional images</p>
+            <p className="mt-1 text-xs text-gray-500">You can upload up to 3 additional images</p>
           </div>
         </div>
 

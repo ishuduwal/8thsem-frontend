@@ -1,4 +1,3 @@
-// utils/jwtUtils.ts
 export interface DecodedToken {
   username: string;
   exp: number;
