@@ -15,7 +15,6 @@ export const ProductDetail = () => {
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState<'recommendations' | 'reviews'>('recommendations');
 
-  const currentUser = localStorage.getItem('username') || 'guest';
 
   useEffect(() => {
     const fetchProduct = async () => {

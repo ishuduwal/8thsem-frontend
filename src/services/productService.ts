@@ -3,6 +3,14 @@ import type { Product, ProductResponse } from "../types/Product";
 import type { ProductReviews, Reply, Comment } from "../types/Review";
 import { getCurrentUser } from "../utils/jwtUtlis";
 
+export interface ProductFilters {
+  page?: number;
+  search?: string;
+  category?: string;
+  price?: string;
+  sort?: string;
+}
+
 class ProductService {
   private baseURL = `${API_BASE_URL}/products`;
   
@@ -19,6 +27,7 @@ class ProductService {
     
     return headers;
   }
+
   private getCurrentUsername(): string {
     const username = getCurrentUser();
     if (!username) {
@@ -45,24 +54,58 @@ class ProductService {
     }
   }
 
-  async getAllProducts(page: number = 1, search: string = ''): Promise<ProductResponse> {
+  async getAllProducts(filters: ProductFilters = {}): Promise<ProductResponse> {
     try {
       const url = new URL(this.baseURL);
-      url.searchParams.append('page', page.toString());
-      if (search) {
-        url.searchParams.append('search', search);
+      
+      // Add all filters to the URL
+      if (filters.page) {
+        url.searchParams.append('page', filters.page.toString());
+      }
+      
+      if (filters.search) {
+        url.searchParams.append('search', filters.search);
+      }
+      
+      if (filters.category) {
+        url.searchParams.append('category', filters.category);
+      }
+      
+      if (filters.price) {
+        url.searchParams.append('price', filters.price);
+      }
+      
+      if (filters.sort) {
+        url.searchParams.append('sort', filters.sort);
       }
 
       const response = await fetch(url.toString());
+      
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Failed to fetch products');
       }
 
-      return await response.json();
+      const data = await response.json();
+      
+      return {
+        products: data.products || [],
+        total: data.total || 0,
+        page: data.page || 1,
+        pages: data.pages || 1,
+        filters: data.filters || {}
+      };
     } catch (error) {
       throw new Error(`Error fetching products: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
+  }
+
+  // Legacy method for backward compatibility
+  async getAllProductsLegacy(page: number = 1, search: string = ''): Promise<ProductResponse> {
+    return this.getAllProducts({
+      page,
+      search: search || undefined
+    });
   }
 
   async getProductById(id: string): Promise<{ data: Product }> {

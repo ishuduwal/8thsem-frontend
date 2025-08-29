@@ -2,6 +2,7 @@ export interface DecodedToken {
   username: string;
   exp: number;
   iat: number;
+  isAdmin? :boolean;
 }
 
 export const decodeJWT = (token: string): DecodedToken | null => {

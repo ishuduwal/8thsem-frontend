@@ -16,60 +16,67 @@ import CreateProduct from "./admin/products/CreateProduct";
 import Login from "./components/login/Login";
 import Signup from "./components/signup/Signup";
 import AuthLayout from "./components/AuthLayout";
-import { Product } from "./components/product/Product";
 import { ProductDetail } from "./components/product/ProductDetail";
 import ForgotPassword from "./components/auth/ForgotPassword";
 import ResetPasswordOTP from "./components/auth/ResetPasswordOTP";
 import './App.css'
 import UserManagement from "./admin/user-management/UserManagement";
+import { ProductsPage } from "./components/product/ProductsPage";
+import { AdminRoute, AuthOnlyRoute } from "./components/ProtectedRoute";
 
 function App() {
   return (
-    <>
-      <div className="app">
-        <Router>
-          <Routes>
-            <Route path="/admin-dashboard" element={<Layout />}>
-              <Route index element={<Dashboard />} />
-              <Route path="categories" element={<CategoriesList />} />
-              <Route path="categories/new" element={<CreateCategory />} />
-              <Route path="categories/edit/:id" element={<EditCategory />} />
-              <Route path="products" element={<ProductList />} />
-              <Route path="products/edit/:id" element={<EditProduct />} />
-              <Route path="products/create" element={<CreateProduct />} />
-              <Route path="discounts" element={<DiscountsList />} />
-              <Route path="user-management" element={<UserManagement />} />
-              {/*other routes here */}
-            </Route>
-            <Route path="/" element={<MainLayout />}>
-              <Route index element={<Home />} />
-              <Route path="/products" element={<Product />} />
-              <Route path="/products/:id" element={<ProductDetail />} />
-              {/*  other public routes here */}
-            </Route>
-            {/* Auth Routes  */}
-            <Route path="/" element={<AuthLayout />}>
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Signup />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/reset-password-otp" element={<ResetPasswordOTP />} />
-            </Route>
-          </Routes>
-        </Router>
-        <ToastContainer
-          position="top-right"
-          autoClose={5000}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-        />
-      </div>
-    </>
+    <div className="app">
+      <Router>
+        <Routes>
+          {/* Admin Dashboard - only for Admins */}
+          <Route
+            path="/admin-dashboard"
+            element={
+              <AdminRoute>
+                <Layout />
+              </AdminRoute>
+            }
+          >
+            <Route index element={<Dashboard />} />
+            <Route path="categories" element={<CategoriesList />} />
+            <Route path="categories/new" element={<CreateCategory />} />
+            <Route path="categories/edit/:id" element={<EditCategory />} />
+            <Route path="products" element={<ProductList />} />
+            <Route path="products/edit/:id" element={<EditProduct />} />
+            <Route path="products/create" element={<CreateProduct />} />
+            <Route path="discounts" element={<DiscountsList />} />
+            <Route path="user-management" element={<UserManagement />} />
+          </Route>
+
+          {/* Public Layout */}
+          <Route path="/" element={<MainLayout />}>
+            <Route index element={<Home />} />
+            <Route path="/products" element={<ProductsPage />} />
+            <Route path="/products/:id" element={<ProductDetail />} />
+          </Route>
+
+          {/* Auth Routes - only if not logged in */}
+          <Route
+            path="/"
+            element={
+              <AuthOnlyRoute>
+                <AuthLayout />
+              </AuthOnlyRoute>
+            }
+          >
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password-otp" element={<ResetPasswordOTP />} />
+          </Route>
+        </Routes>
+      </Router>
+
+      <ToastContainer position="top-right" autoClose={5000} />
+    </div>
   );
 }
+
 
 export default App;

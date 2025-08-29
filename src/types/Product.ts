@@ -17,12 +17,14 @@ export interface Product {
 }
 
 export interface ProductResponse {
-  success: boolean;
-  message: string;
-  data: Product | Product[];
-  pagination?: {
-    currentPage: number;
-    totalPages: number;
-    totalProducts: number;
+  products: Product[];
+  total: number;
+  page: number;
+  pages: number;
+  filters?: {
+    category?: string[];
+    price?: string;
+    sort?: string;
+    search?: string;
   };
 }
