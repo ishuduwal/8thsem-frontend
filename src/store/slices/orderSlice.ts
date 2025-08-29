@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
 import orderService from '../../services/orderService';
-import type { IOrder } from '../../types/Order';
+import type { IOrder, CreateOrderData, OrdersResponse, CreateOrderResponse } from '../../types/Order';
 
 interface OrderState {
   orders: IOrder[];
@@ -23,6 +23,17 @@ const initialState: OrderState = {
 };
 
 // Async thunks
+export const createOrderFromCart = createAsyncThunk(
+  'order/createOrderFromCart',
+  async (orderData: CreateOrderData, { rejectWithValue }) => {
+    try {
+      return await orderService.createOrderFromCart(orderData);
+    } catch (error: any) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
 export const createOrder = createAsyncThunk(
   'order/createOrder',
   async (orderData: any, { rejectWithValue }) => {
@@ -89,6 +100,28 @@ export const getAllOrders = createAsyncThunk(
   }
 );
 
+export const processEsewaSuccess = createAsyncThunk(
+  'order/processEsewaSuccess',
+  async (data: string, { rejectWithValue }) => {
+    try {
+      return await orderService.handleEsewaSuccess(data);
+    } catch (error: any) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+export const processEsewaFailure = createAsyncThunk(
+  'order/processEsewaFailure',
+  async (transaction_uuid: string, { rejectWithValue }) => {
+    try {
+      return await orderService.handleEsewaFailure(transaction_uuid);
+    } catch (error: any) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
 const orderSlice = createSlice({
   name: 'order',
   initialState,
@@ -110,6 +143,21 @@ const orderSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      // Create Order From Cart
+      .addCase(createOrderFromCart.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(createOrderFromCart.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.currentOrder = action.payload.order;
+        state.error = null;
+      })
+      .addCase(createOrderFromCart.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+      })
+
       // Create Order
       .addCase(createOrder.pending, (state) => {
         state.isLoading = true;
@@ -206,6 +254,35 @@ const orderSlice = createSlice({
         state.error = null;
       })
       .addCase(getAllOrders.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+      })
+
+      // Process eSewa Success
+      .addCase(processEsewaSuccess.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(processEsewaSuccess.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.currentOrder = action.payload.order;
+        state.error = null;
+      })
+      .addCase(processEsewaSuccess.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+      })
+
+      // Process eSewa Failure
+      .addCase(processEsewaFailure.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(processEsewaFailure.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.error = null;
+      })
+      .addCase(processEsewaFailure.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
       });

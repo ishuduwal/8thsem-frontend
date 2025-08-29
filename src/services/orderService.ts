@@ -1,28 +1,9 @@
 import API_BASE_URL from "../config/api";
-import type { IOrder } from "../types/Order";
-
-
-interface CreateOrderData {
-  deliveryAddress: {
-    fullName: string;
-    phoneNumber: string;
-    address: string;
-    city: string;
-    postalCode?: string;
-  };
-  paymentMethod: 'CASH_ON_DELIVERY' | 'ESEWA';
-  notes?: string;
-}
-
-interface OrdersResponse {
-  orders: IOrder[];
-  total: number;
-  page: number;
-  pages: number;
-}
+import type { IOrder, CreateOrderData, OrdersResponse, CreateOrderResponse } from "../types/Order";
+import { getCurrentUserEmail } from "../utils/jwtUtlis";
 
 class OrderService {
-  private baseURL = `${API_BASE_URL}/orders`;
+  private baseURL = `${API_BASE_URL}/order`;
   
   // Helper method to get headers with authentication
   private async getAuthHeaders(): Promise<HeadersInit> {
@@ -38,7 +19,57 @@ class OrderService {
     return headers;
   }
 
-  async createOrder(orderData: CreateOrderData): Promise<{order: IOrder, paymentData?: any}> {
+  async createOrderFromCart(orderData: CreateOrderData): Promise<CreateOrderResponse> {
+    try {
+      const userEmail = getCurrentUserEmail();
+      if (!userEmail) {
+        throw new Error('User email not found. Please login again.');
+      }
+
+      const headers = await this.getAuthHeaders();
+      
+      // Include userEmail in the request body
+      const requestBody = {
+        ...orderData,
+        userEmail // Add the userEmail field
+      };
+
+      console.log('Creating order with data:', requestBody);
+
+      const response = await fetch(`${this.baseURL}/from-cart`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(requestBody),
+      });
+
+      // Check if response is HTML (server error)
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('text/html')) {
+        const htmlResponse = await response.text();
+        console.error('Server returned HTML instead of JSON:', htmlResponse.substring(0, 500));
+        throw new Error('Server error occurred. Please try again later.');
+      }
+
+      if (!response.ok) {
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch (jsonError) {
+          // If JSON parsing fails, use the response text
+          const textResponse = await response.text();
+          throw new Error(textResponse || `Server error: ${response.status} ${response.statusText}`);
+        }
+        throw new Error(errorData.message || `Failed to create order: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Order creation error details:', error);
+      throw new Error(`Error creating order: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  async createOrder(orderData: any): Promise<CreateOrderResponse> {
     try {
       const headers = await this.getAuthHeaders();
       const response = await fetch(this.baseURL, {
@@ -156,6 +187,46 @@ class OrderService {
       return await response.json();
     } catch (error) {
       throw new Error(`Error fetching orders: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  // Handle eSewa payment success
+  async handleEsewaSuccess(data: string): Promise<any> {
+    try {
+      const headers = await this.getAuthHeaders();
+      const response = await fetch(`${this.baseURL}/esewa/success?data=${encodeURIComponent(data)}`, {
+        method: 'POST',
+        headers,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to process eSewa payment');
+      }
+
+      return await response.json();
+    } catch (error) {
+      throw new Error(`Error processing eSewa payment: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  // Handle eSewa payment failure
+  async handleEsewaFailure(transaction_uuid: string): Promise<any> {
+    try {
+      const headers = await this.getAuthHeaders();
+      const response = await fetch(`${this.baseURL}/esewa/failure?transaction_uuid=${transaction_uuid}`, {
+        method: 'POST',
+        headers,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to process eSewa payment failure');
+      }
+
+      return await response.json();
+    } catch (error) {
+      throw new Error(`Error processing eSewa payment failure: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 }

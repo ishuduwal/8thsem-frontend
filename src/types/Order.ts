@@ -1,9 +1,17 @@
+export interface IProduct {
+  _id: string;
+  name: string;
+  price: number;
+  description: string;
+  mainImage: string;
+  id: string;
+}
+
 export interface IOrderItem {
-  product: string;
+  product: IProduct;
   quantity: number;
   price: number;
-  name?: string;
-  image?: string;
+  _id: string;
 }
 
 export interface IDeliveryAddress {
@@ -12,11 +20,13 @@ export interface IDeliveryAddress {
   address: string;
   city: string;
   postalCode?: string;
+  _id: string;
 }
 
 export interface IUserInfo {
   email: string;
   username: string;
+  _id: string;
 }
 
 export interface IOrder {
@@ -31,14 +41,34 @@ export interface IOrder {
   taxAmount: number;
   deliveryCharge: number;
   grandTotal: number;
-  
-  // eSewa specific fields
-  esewaTransactionUuid?: string;
-  esewaTransactionCode?: string;
-  esewaRefId?: string;
-  esewaSignature?: string;
-  
   notes?: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+  id: string;
+}
+
+export interface OrdersResponse {
+  orders: IOrder[];
+  total: number;
+  page: number;
+  pages: number;
+}
+
+export interface CreateOrderResponse {
+  order: IOrder;
+  paymentData?: any;
+  instructions?: any;
+}
+
+export interface CreateOrderData {
+  deliveryAddress: {
+    fullName: string;
+    phoneNumber: string;
+    address: string;
+    city: string;
+    postalCode?: string;
+  };
+  paymentMethod: 'CASH_ON_DELIVERY' | 'ESEWA';
+  notes?: string;
 }

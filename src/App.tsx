@@ -25,6 +25,10 @@ import { ProductsPage } from "./components/product/ProductsPage";
 import { AdminRoute, AuthOnlyRoute } from "./components/ProtectedRoute";
 import { CartPage } from "./components/cart/CartPage";
 import { AdminOrdersPage } from "./admin/orders/AdminOrdersPage";
+import { CheckoutPage } from "./components/checkout/CheckoutPage";
+import { OrderConfirmationPage } from "./components/order/OrderConfirmationPage";
+import { CustomerOrderHistory } from "./components/order/CustomerOrderHistory";
+import { OrderDetailPage } from "./admin/orders/OrderDetailPage";
 
 function App() {
   return (
@@ -50,6 +54,7 @@ function App() {
             <Route path="discounts" element={<DiscountsList />} />
             <Route path="user-management" element={<UserManagement />} />
             <Route path="orders" element={<AdminOrdersPage />} />
+            <Route path="orders/:orderId" element={<OrderDetailPage />} />
           </Route>
 
           {/* Public Layout */}
@@ -58,6 +63,9 @@ function App() {
             <Route path="/products" element={<ProductsPage />} />
             <Route path="/products/:id" element={<ProductDetail />} />
             <Route path="/cart" element={<CartPage />} />
+            <Route path="/checkout" element={<CheckoutPage />} />
+            <Route path="/orders/:orderId" element={<OrderConfirmationPage />} />
+            <Route path="/orders" element={<CustomerOrderHistory />} />
           </Route>
 
           {/* Auth Routes - only if not logged in */}

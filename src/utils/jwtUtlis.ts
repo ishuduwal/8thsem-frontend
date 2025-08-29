@@ -1,8 +1,10 @@
 export interface DecodedToken {
+  userId: string;
   username: string;
+  email?: string;
   exp: number;
   iat: number;
-  isAdmin? :boolean;
+  isAdmin?: boolean;
 }
 
 export const decodeJWT = (token: string): DecodedToken | null => {
@@ -31,14 +33,34 @@ export const decodeJWT = (token: string): DecodedToken | null => {
   }
 };
 
-export const getCurrentUser = (): string | null => {
+export const getCurrentUserEmail = (): string | null => {
   const token = localStorage.getItem('accessToken');
   console.log('Token from localStorage:', token);
   
   if (token) {
     const decodedToken = decodeJWT(token);
-    console.log('Decoded token for user:', decodedToken);
+    console.log('Decoded token for email:', decodedToken);
+    
+    // Prioritize email, fall back to username if email doesn't exist
+    return decodedToken?.email || decodedToken?.username || null;
+  }
+  return null;
+};
+
+export const getCurrentUser = (): string | null => {
+  const token = localStorage.getItem('accessToken');
+  if (token) {
+    const decodedToken = decodeJWT(token);
     return decodedToken?.username || null;
+  }
+  return null;
+};
+
+export const getCurrentUserId = (): string | null => {
+  const token = localStorage.getItem('accessToken');
+  if (token) {
+    const decodedToken = decodeJWT(token);
+    return decodedToken?.userId || null;
   }
   return null;
 };
