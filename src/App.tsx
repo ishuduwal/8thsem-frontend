@@ -23,6 +23,8 @@ import './App.css'
 import UserManagement from "./admin/user-management/UserManagement";
 import { ProductsPage } from "./components/product/ProductsPage";
 import { AdminRoute, AuthOnlyRoute } from "./components/ProtectedRoute";
+import { CartPage } from "./components/cart/CartPage";
+import { AdminOrdersPage } from "./admin/orders/AdminOrdersPage";
 
 function App() {
   return (
@@ -47,6 +49,7 @@ function App() {
             <Route path="products/create" element={<CreateProduct />} />
             <Route path="discounts" element={<DiscountsList />} />
             <Route path="user-management" element={<UserManagement />} />
+            <Route path="orders" element={<AdminOrdersPage />} />
           </Route>
 
           {/* Public Layout */}
@@ -54,6 +57,7 @@ function App() {
             <Route index element={<Home />} />
             <Route path="/products" element={<ProductsPage />} />
             <Route path="/products/:id" element={<ProductDetail />} />
+            <Route path="/cart" element={<CartPage />} />
           </Route>
 
           {/* Auth Routes - only if not logged in */}

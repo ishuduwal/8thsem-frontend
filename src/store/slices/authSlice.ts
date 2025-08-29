@@ -12,13 +12,38 @@ interface AuthState {
   resetEmail: string | null;
 }
 
+// Helper functions for localStorage
+const getStorageItem = (key: string): string | null => {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+};
+
+const setStorageItem = (key: string, value: string): void => {
+  try {
+    localStorage.setItem(key, value);
+  } catch (error) {
+    console.error('Failed to save to localStorage:', error);
+  }
+};
+
+const removeStorageItem = (key: string): void => {
+  try {
+    localStorage.removeItem(key);
+  } catch (error) {
+    console.error('Failed to remove from localStorage:', error);
+  }
+};
+
 const initialState: AuthState = {
   user: null,
-  accessToken: localStorage.getItem('accessToken'),
-  refreshToken: localStorage.getItem('refreshToken'),
+  accessToken: getStorageItem('accessToken'),
+  refreshToken: getStorageItem('refreshToken'),
   isLoading: false,
   error: null,
-  isAuthenticated: !!localStorage.getItem('accessToken'),
+  isAuthenticated: !!getStorageItem('accessToken'),
   allUsers: [],
   resetEmail: null,
 };
@@ -29,11 +54,11 @@ export const signup = createAsyncThunk(
   async (userData: SignupData, { rejectWithValue }) => {
     try {
       const response = await userService.signup(userData);
-      localStorage.setItem('accessToken', response.accessToken);
-      localStorage.setItem('refreshToken', response.refreshToken);
+      setStorageItem('accessToken', response.accessToken);
+      setStorageItem('refreshToken', response.refreshToken);
       return response;
     } catch (error: any) {
-      return rejectWithValue(error.message);
+      return rejectWithValue(error.message || 'Signup failed');
     }
   }
 );
@@ -43,11 +68,11 @@ export const login = createAsyncThunk(
   async (loginData: LoginData, { rejectWithValue }) => {
     try {
       const response = await userService.login(loginData);
-      localStorage.setItem('accessToken', response.accessToken);
-      localStorage.setItem('refreshToken', response.refreshToken);
+      setStorageItem('accessToken', response.accessToken);
+      setStorageItem('refreshToken', response.refreshToken);
       return response;
     } catch (error: any) {
-      return rejectWithValue(error.message);
+      return rejectWithValue(error.message || 'Login failed');
     }
   }
 );
@@ -64,12 +89,12 @@ export const refreshToken = createAsyncThunk(
       }
 
       const response = await userService.refreshToken({ refreshToken });
-      localStorage.setItem('accessToken', response.accessToken);
+      setStorageItem('accessToken', response.accessToken);
       return response;
     } catch (error: any) {
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      return rejectWithValue(error.message);
+      removeStorageItem('accessToken');
+      removeStorageItem('refreshToken');
+      return rejectWithValue(error.message || 'Token refresh failed');
     }
   }
 );
@@ -81,7 +106,7 @@ export const requestPasswordReset = createAsyncThunk(
       const response = await userService.requestPasswordReset(data);
       return response;
     } catch (error: any) {
-      return rejectWithValue(error.message);
+      return rejectWithValue(error.message || 'Password reset request failed');
     }
   }
 );
@@ -93,7 +118,7 @@ export const verifyOTP = createAsyncThunk(
       const response = await userService.verifyOTP(data);
       return response;
     } catch (error: any) {
-      return rejectWithValue(error.message);
+      return rejectWithValue(error.message || 'OTP verification failed');
     }
   }
 );
@@ -105,7 +130,7 @@ export const verifyOTPAndResetPassword = createAsyncThunk(
       const response = await userService.verifyOTPAndResetPassword(data);
       return response;
     } catch (error: any) {
-      return rejectWithValue(error.message);
+      return rejectWithValue(error.message || 'Password reset failed');
     }
   }
 );
@@ -117,7 +142,7 @@ export const resendOTP = createAsyncThunk(
       const response = await userService.resendOTP(data);
       return response;
     } catch (error: any) {
-      return rejectWithValue(error.message);
+      return rejectWithValue(error.message || 'Resend OTP failed');
     }
   }
 );
@@ -134,8 +159,8 @@ const authSlice = createSlice({
       state.error = null;
       state.allUsers = [];
       state.resetEmail = null;
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
+      removeStorageItem('accessToken');
+      removeStorageItem('refreshToken');
     },
     clearError: (state) => {
       state.error = null;
@@ -144,6 +169,8 @@ const authSlice = createSlice({
       state.accessToken = action.payload.accessToken;
       state.refreshToken = action.payload.refreshToken;
       state.isAuthenticated = true;
+      setStorageItem('accessToken', action.payload.accessToken);
+      setStorageItem('refreshToken', action.payload.refreshToken);
     },
   },
   extraReducers: (builder) => {
@@ -185,14 +212,21 @@ const authSlice = createSlice({
       })
 
       // Refresh Token
+      .addCase(refreshToken.pending, (state) => {
+        state.isLoading = true;
+      })
       .addCase(refreshToken.fulfilled, (state, action) => {
+        state.isLoading = false;
         state.accessToken = action.payload.accessToken;
+        state.error = null;
       })
       .addCase(refreshToken.rejected, (state) => {
+        state.isLoading = false;
         state.user = null;
         state.accessToken = null;
         state.refreshToken = null;
         state.isAuthenticated = false;
+        state.error = null; // Don't show error for automatic token refresh
       })
 
       // Password Reset Request

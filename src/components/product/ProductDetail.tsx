@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import type { Product } from '../../types/Product';
 import productService from '../../services/productService';
 import { ProductReview } from './ProductReview';
 import { RecommendedProduct } from './RecommendedProduct';
 import { StarRating } from '../StarRating';
+import { useCart } from '../../store/hooks/useCart';
+import { useAppSelector } from '../../store/hooks';
 
 export const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -14,11 +16,19 @@ export const ProductDetail = () => {
   const [selectedImage, setSelectedImage] = useState<string>('');
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState<'recommendations' | 'reviews'>('recommendations');
-
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
+  
+  const { addToCart } = useCart();
+  const { isAuthenticated } = useAppSelector((state) => state.auth);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchProduct = async () => {
-      if (!id) return;
+      if (!id) {
+        setError('Product ID is required');
+        setLoading(false);
+        return;
+      }
       
       try {
         setLoading(true);
@@ -41,11 +51,38 @@ export const ProductDetail = () => {
 
   const handleQuantityChange = (newQuantity: number) => {
     if (newQuantity < 1) return;
+    if (product && newQuantity > product.stock) return;
     setQuantity(newQuantity);
   };
 
-  const handleAddToCart = () => {
-    alert(`Added ${quantity} ${product?.name} to cart`);
+  const handleAddToCart = async () => {
+    if (!product || !id) return;
+    
+    if (!isAuthenticated) {
+      alert('Please login to add items to cart');
+      navigate('/login');
+      return;
+    }
+
+    setIsAddingToCart(true);
+    try {
+      await addToCart(id, quantity); // Use id from useParams instead of product._id
+      alert(`Added ${quantity} ${product.name} to cart`);
+    } catch (err) {
+      if (err instanceof Error) {
+        if (err.message.includes('login') || err.message.includes('authenticated')) {
+          alert('Please login to add items to cart');
+          navigate('/login');
+        } else {
+          alert(`Failed to add to cart: ${err.message}`);
+        }
+      } else {
+        alert('Failed to add to cart. Please try again.');
+      }
+      console.error('Add to cart error:', err);
+    } finally {
+      setIsAddingToCart(false);
+    }
   };
 
   const getCategoryName = () => {
@@ -79,10 +116,10 @@ export const ProductDetail = () => {
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex flex-col lg:flex-row gap-8">
-        {/* Product Images Section - Redesigned */}
+        {/* Product Images Section */}
         <div className="lg:w-1/2">
           <div className="flex flex-col md:flex-row gap-4">
-            {/* Sub-images column (right on desktop, top on mobile) */}
+            {/* Sub-images column */}
             {product.subImages && product.subImages.length > 0 && (
               <div className="flex md:flex-col gap-2 order-2 md:order-1">
                 <button
@@ -120,7 +157,7 @@ export const ProductDetail = () => {
               </div>
             )}
             
-            {/* Main image (left on desktop, below on mobile) */}
+            {/* Main image */}
             <div className="bg-white rounded-sm overflow-hidden border border-gray-200 shadow-sm flex-1 order-1 md:order-2">
               <img
                 src={selectedImage}
@@ -183,8 +220,8 @@ export const ProductDetail = () => {
               <div className="flex items-center border border-gray-300 rounded-md">
                 <button
                   onClick={() => handleQuantityChange(quantity - 1)}
-                  className="px-3 py-1 text-gray-600 hover:bg-gray-100 transition-colors"
-                  disabled={quantity <= 1}
+                  className="px-3 py-1 text-gray-600 hover:bg-gray-100 transition-colors disabled:opacity-50"
+                  disabled={quantity <= 1 || isAddingToCart}
                 >
                   -
                 </button>
@@ -192,13 +229,16 @@ export const ProductDetail = () => {
                   type="number"
                   id="quantity"
                   min="1"
+                  max={product.stock}
                   value={quantity}
                   onChange={(e) => handleQuantityChange(parseInt(e.target.value) || 1)}
                   className="w-12 text-center border-0 py-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  disabled={isAddingToCart}
                 />
                 <button
                   onClick={() => handleQuantityChange(quantity + 1)}
-                  className="px-3 py-1 text-gray-600 hover:bg-gray-100 transition-colors"
+                  className="px-3 py-1 text-gray-600 hover:bg-gray-100 transition-colors disabled:opacity-50"
+                  disabled={quantity >= (product.stock || 1) || isAddingToCart}
                 >
                   +
                 </button>
@@ -207,9 +247,19 @@ export const ProductDetail = () => {
 
             <button
               onClick={handleAddToCart}
-              className="w-100 py-2 px-6 rounded-md bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors duration-200 shadow-md hover:shadow-lg"
+              disabled={!product.stock || product.stock < 1 || isAddingToCart}
+              className="w-full py-2 px-6 rounded-md bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors duration-200 shadow-md hover:shadow-lg disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center"
             >
-              Add to Cart
+              {isAddingToCart ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
+                  Adding to Cart...
+                </>
+              ) : product.stock && product.stock > 0 ? (
+                'Add to Cart'
+              ) : (
+                'Out of Stock'
+              )}
             </button>
           </div>
         </div>
@@ -248,7 +298,7 @@ export const ProductDetail = () => {
           )}
 
           {activeTab === 'reviews' && id && (
-            <ProductReview productId={id} currentUser={currentUser} />
+            <ProductReview productId={id} />
           )}
         </div>
       </div>
