@@ -1,66 +1,115 @@
-import { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-
-interface Slide {
-  id: number;
-  src: string;
-  alt: string;
-}
+// import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Link } from "react-router-dom";
+import { useEffect, useState, useRef } from "react";
+import imgOne from '../../assets/img-one.png';
+import imgTwo from '../../assets/img-two.png';
+import imgThree from '../../assets/img-three.png';
 
 export const Home = () => {
   const [currentSlide, setCurrentSlide] = useState<number>(0);
-  
-  const slides: Slide[] = [
+  const [startX, setStartX] = useState<number>(0);
+  const [isDragging, setIsDragging] = useState<boolean>(false);
+  const carouselRef = useRef<HTMLDivElement>(null);
+
+  const slides = [
     {
       id: 1,
-      src: "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80",
-      alt: "Fashion collection"
+      src: imgOne,
+      alt: "Men's Shirts Collection",
+      title: "Men's Shirts for Everyday Style",
+      subtitle: "Premium Quality & Comfort for All Occasions",
+      buttonText: "Shop Now"
     },
     {
       id: 2,
-      src: "https://images.unsplash.com/photo-1483985988355-763728e1935b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80",
-      alt: "Summer sale"
+      src: imgTwo,
+      alt: "Men's Pants Collection",
+      title: "Men's Pants for Modern Trends",
+      subtitle: "Stylish & Durable for Long-Lasting Wear",
+      buttonText: "Shop Now"
     },
     {
       id: 3,
-      src: "https://images.unsplash.com/photo-1546868871-7041f2a55e12?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1364&q=80",
-      alt: "New arrivals"
-    },
-    {
-      id: 4,
-      src: "https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80",
-      alt: "Accessories collection"
-    },
-    {
-      id: 5,
-      src: "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80",
-      alt: "Winter collection"
+      src: imgThree,
+      alt: "Men's Shoes Collection",
+      title: "Men's Shoes with Ultimate Comfort",
+      subtitle: "Perfect Fit & Style for Every Step",
+      buttonText: "Shop Now"
     }
   ];
 
   const nextSlide = (): void => {
-    setCurrentSlide((prev) => (prev === slides.length - 1 ? 0 : prev + 1));
+    setCurrentSlide((prev: number) => (prev === slides.length - 1 ? 0 : prev + 1));
   };
 
   const prevSlide = (): void => {
-    setCurrentSlide((prev) => (prev === 0 ? slides.length - 1 : prev - 1));
+    setCurrentSlide((prev: number) => (prev === 0 ? slides.length - 1 : prev - 1));
   };
 
   const goToSlide = (index: number): void => {
     setCurrentSlide(index);
   };
 
+  // Touch and drag event handlers
+  const handleTouchStart = (e: React.TouchEvent | React.MouseEvent) => {
+    setIsDragging(true);
+    if ('touches' in e) {
+      setStartX(e.touches[0].clientX);
+    } else {
+      setStartX(e.clientX);
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent | React.MouseEvent) => {
+    if (!isDragging) return;
+    
+    let currentX: number;
+    if ('touches' in e) {
+      currentX = e.touches[0].clientX;
+    } else {
+      currentX = e.clientX;
+    }
+    
+    const diffX = startX - currentX;
+    
+    // If swipe is significant, change slide
+    if (Math.abs(diffX) > 50) {
+      if (diffX > 0) {
+        nextSlide();
+      } else {
+        prevSlide();
+      }
+      setIsDragging(false);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setIsDragging(false);
+  };
+
   useEffect(() => {
     const interval = setInterval(() => {
-      nextSlide();
+      if (!isDragging) {
+        nextSlide();
+      }
     }, 5000);
     return () => clearInterval(interval);
-  }, [currentSlide]);
+  }, [currentSlide, isDragging]);
 
   return (
     <div className="w-full">
-      <div className="relative w-full overflow-hidden">
-        <div className="relative aspect-video h-[50vh] md:h-[70vh] lg:h-[80vh] overflow-hidden">
+      <div 
+        className="relative w-full overflow-hidden"
+        ref={carouselRef}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onMouseDown={handleTouchStart}
+        onMouseMove={handleTouchMove}
+        onMouseUp={handleTouchEnd}
+        onMouseLeave={handleTouchEnd}
+      >
+        <div className="relative h-screen overflow-hidden">
           {slides.map((slide, index: number) => (
             <div
               key={slide.id}
@@ -72,9 +121,41 @@ export const Home = () => {
                 className="w-full h-full object-cover"
                 loading="lazy"
               />
+
+              {/* Text overlay for desktop - positioned on left */}
+              <div className="hidden md:flex absolute inset-0 items-center">
+                <div className="container mx-auto px-8">
+                  <div className="max-w-md">
+                    <h2 className="text-3xl text-white font-bold mb-2">{slide.title}</h2>
+                    <p className="text-xl text-white mb-6">{slide.subtitle}</p>
+                    <Link
+                      to="/products"
+                      className="inline-block bg-white text-black px-6 py-3 rounded-md hover:bg-gray-100 transition-colors duration-300"
+                    >
+                      {slide.buttonText}
+                    </Link>
+                  </div>
+                </div>
+              </div>
+
+              {/* Text overlay for mobile - positioned below image */}
+              <div className="md:hidden absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/70 to-transparent">
+                <div className="max-w-md mx-auto">
+                  <h2 className="text-2xl md:text-3xl text-white font-bold mb-2">{slide.title}</h2>
+                  <p className="text-lg md:text-xl text-white mb-6">{slide.subtitle}</p>
+                  <Link
+                    to="/products"
+                    className="inline-block bg-white text-black px-6 py-3 rounded-md hover:bg-gray-100 transition-colors duration-300"
+                  >
+                    {slide.buttonText}
+                  </Link>
+                </div>
+              </div>
             </div>
           ))}
         </div>
+
+        {/* Navigation dots */}
         <div className="absolute z-30 flex space-x-3 -translate-x-1/2 bottom-5 left-1/2">
           {slides.map((_, index: number) => (
             <button
@@ -88,9 +169,9 @@ export const Home = () => {
           ))}
         </div>
 
-        <button
+        {/* <button
           type="button"
-          className="absolute top-1/2 left-4 z-30 flex items-center justify-center w-10 h-10 -translate-y-1/2 rounded-full bg-white/30 hover:bg-white/50 focus:outline-none focus:ring-2 focus:ring-white/70 transition-all"
+          className="absolute top-1/2 left-4 z-30 flex items-center justify-center w-10 h-10 -translate-y-1/2 rounded-full bg-black/30 hover:bg-black/50 focus:outline-none focus:ring-2 focus:ring-white/70 transition-all"
           onClick={prevSlide}
           aria-label="Previous slide"
         >
@@ -98,16 +179,17 @@ export const Home = () => {
         </button>
         <button
           type="button"
-          className="absolute top-1/2 right-4 z-30 flex items-center justify-center w-10 h-10 -translate-y-1/2 rounded-full bg-white/30 hover:bg-white/50 focus:outline-none focus:ring-2 focus:ring-white/70 transition-all"
+          className="absolute top-1/2 right-4 z-30 flex items-center justify-center w-10 h-10 -translate-y-1/2 rounded-full bg-black/30 hover:bg-black/50 focus:outline-none focus:ring-2 focus:ring-white/70 transition-all"
           onClick={nextSlide}
           aria-label="Next slide"
         >
           <ChevronRight className="w-6 h-6 text-white" />
-        </button>
+        </button> */}
       </div>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 mt-8">
         <h2 className="text-2xl font-bold mb-6">Featured Products</h2>
+        {/* Featured products content will go here */}
       </div>
     </div>
   );

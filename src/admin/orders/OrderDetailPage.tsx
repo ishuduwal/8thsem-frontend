@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { 
   ArrowLeft, 
@@ -222,7 +222,7 @@ export const OrderDetailPage = () => {
                           Qty: {item.quantity}
                         </div>
                         <div className="font-medium text-gray-900">
-                          ${item.price.toFixed(2)}
+                          Rs. {item.price.toFixed(2)}
                         </div>
                       </div>
                     </div>
@@ -235,27 +235,27 @@ export const OrderDetailPage = () => {
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Subtotal</span>
-                    <span className="text-gray-900">${order.totalAmount.toFixed(2)}</span>
+                    <span className="text-gray-900">Rs. {order.totalAmount.toFixed(2)}</span>
                   </div>
                   
                   {order.taxAmount > 0 && (
                     <div className="flex justify-between">
                       <span className="text-gray-600">Tax</span>
-                      <span className="text-gray-900">${order.taxAmount.toFixed(2)}</span>
+                      <span className="text-gray-900">Rs. {order.taxAmount.toFixed(2)}</span>
                     </div>
                   )}
                   
                   {order.deliveryCharge > 0 && (
                     <div className="flex justify-between">
                       <span className="text-gray-600">Delivery</span>
-                      <span className="text-gray-900">${order.deliveryCharge.toFixed(2)}</span>
+                      <span className="text-gray-900">Rs. {order.deliveryCharge.toFixed(2)}</span>
                     </div>
                   )}
                   
                   <div className="flex justify-between pt-2 border-t border-gray-200">
                     <span className="font-semibold text-gray-900">Total</span>
                     <span className="font-bold text-lg text-gray-900">
-                      ${order.grandTotal.toFixed(2)}
+                      Rs. {order.grandTotal.toFixed(2)}
                     </span>
                   </div>
                 </div>
@@ -422,7 +422,7 @@ export const OrderDetailPage = () => {
                 
                 <div>
                   <p className="text-sm text-gray-600">Amount</p>
-                  <p className="font-medium text-gray-900">${order.grandTotal.toFixed(2)}</p>
+                  <p className="font-medium text-gray-900">Rs. {order.grandTotal.toFixed(2)}</p>
                 </div>
               </div>
             </div>

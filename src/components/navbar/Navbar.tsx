@@ -1,14 +1,16 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { Heart, ShoppingCart, User, Menu, X, Search } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { ShoppingCart, User, Menu, X, Search } from 'lucide-react';
 import { decodeJWT } from '../../utils/jwtUtlis';
 
 export const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [username, setUsername] = useState<string | null>(null);
+  const [isScrolled, setIsScrolled] = useState<boolean>(false);
+  const location = useLocation();
 
-  useEffect(() => {
+   useEffect(() => {
     const token = localStorage.getItem('accessToken');
     if (token) {
       const decodedToken = decodeJWT(token);
@@ -17,6 +19,18 @@ export const Navbar = () => {
       }
     }
   }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Determine if we're on the home page
+  const isHomePage = location.pathname === '/';
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -30,7 +44,11 @@ export const Navbar = () => {
   };
 
   return (
-    <nav className="bg-[#222222] text-white shadow-lg sticky top-0 z-50">
+    <nav 
+      className={`fixed w-full z-50 transition-all duration-300 ${
+        !isHomePage || isScrolled ? 'bg-[#222222] shadow-lg' : 'bg-transparent'
+      }`}
+    >
       <div className="max-w-7xl mx-auto px-4 py-1 sm:px-6 lg:px-8">
         <div className="flex items-center h-16 justify-between">
           <div className="flex items-center">
@@ -40,8 +58,8 @@ export const Navbar = () => {
             >
               {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
-            <Link to="/" className="text-2xl font-bold">
-              Kyanjinri
+            <Link to="/" className="text-2xl font-bold text-white">
+              AliAli
             </Link>
           </div>
 
@@ -61,9 +79,6 @@ export const Navbar = () => {
           </div>
 
           <div className="flex items-center space-x-6">
-            <Link to="/wishlist" className="text-white hover:text-gray-300 transition-colors duration-200">
-              <Heart size={24} />
-            </Link>
             <Link to="/cart" className="text-white hover:text-gray-300 relative transition-colors duration-200">
               <ShoppingCart size={24} />
               <span className="absolute -top-2 -right-2 bg-purple-500 rounded-full w-4 h-4 flex items-center justify-center">
@@ -75,21 +90,15 @@ export const Navbar = () => {
             {/* User profile section */}
             {username ? (
               <div className="relative group">
-                <div className="flex-shrink-0 h-7 w-7 bg-blue-500 rounded-full flex items-center justify-center text-white cursor-pointer">
+                <div className="flex-shrink-0 h-8 w-8 bg-blue-500 rounded-full flex items-center justify-center text-white cursor-pointer">
                   {username.charAt(0).toUpperCase()}
                 </div>
                 
                 {/* Dropdown menu */}
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform group-hover:translate-y-0 translate-y-1 z-50">
                   <div className="px-4 py-2 border-b border-gray-200">
                     <p className="text-sm text-gray-800 font-medium">Hello, {username}</p>
                   </div>
-                  <Link
-                    to="/account"
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  >
-                    My Account
-                  </Link>
                   <Link
                     to="/orders"
                     className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"

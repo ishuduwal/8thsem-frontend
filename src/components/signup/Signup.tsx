@@ -116,7 +116,7 @@ function SignupForm() {
 
     try {
       await dispatch(signup(formData)).unwrap();
-      navigate('/dashboard');
+      navigate('/');
     } catch (error) {
       // Error is handled by Redux
     }

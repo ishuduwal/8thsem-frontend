@@ -3,12 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../store/hooks/useCart';
 import { useOrders } from '../../store/hooks/useOrders';
 import { toast } from 'react-toastify';
-import { getCurrentUserEmail } from '../../utils/jwtUtlis';
+import { decodeJWT, getCurrentUserEmail } from '../../utils/jwtUtlis';
+import { useAppSelector } from '../../store/hooks';
 
 export const CheckoutPage: React.FC = () => {
   const { cart } = useCart();
   const { createOrderFromCart } = useOrders();
   const navigate = useNavigate();
+  const { user } = useAppSelector((state) => state.auth); // Get user from Redux state
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -24,17 +26,73 @@ export const CheckoutPage: React.FC = () => {
   const [userEmail, setUserEmail] = useState<string>('');
 
   useEffect(() => {
-    // Get user email from JWT token
-    const email = getCurrentUserEmail();
-    console.log('Retrieved user email from token:', email);
+    console.log('Current user email from getCurrentUserEmail():', getCurrentUserEmail());
+  
+  // Debug token
+  const token = localStorage.getItem('accessToken');
+  if (token) {
+    const decoded = decodeJWT(token);
+    console.log('Decoded token:', decoded);
+    console.log('Available fields:', {
+      userId: decoded?.userId,
+      username: decoded?.username,
+      email: decoded?.email,
+      isAdmin: decoded?.isAdmin
+    });
+  }
+    // Try multiple sources to get the user email
+    const getEmail = () => {
+      // 1. First try from Redux auth state
+      if (user?.email) {
+        console.log('Got email from Redux state:', user.email);
+        return user.email;
+      }
+      
+      // 2. Try from JWT token
+      const emailFromToken = getCurrentUserEmail();
+      if (emailFromToken) {
+        console.log('Got email from JWT token:', emailFromToken);
+        return emailFromToken;
+      }
+      
+      // 3. Try from localStorage (auth state)
+      try {
+        const authState = localStorage.getItem('persist:root');
+        if (authState) {
+          const parsedAuthState = JSON.parse(authState);
+          const authData = JSON.parse(parsedAuthState.auth);
+          
+          if (authData.user && authData.user.email) {
+            console.log('Got email from localStorage auth state:', authData.user.email);
+            return authData.user.email;
+          }
+        }
+      } catch (error) {
+        console.error('Error parsing auth state from localStorage:', error);
+      }
+      
+      return null;
+    };
+
+    const email = getEmail();
     
     if (email) {
       setUserEmail(email);
+      
+      // Pre-fill form with user data if available
+      if (user) {
+        setFormData(prev => ({
+          ...prev,
+          fullName: user.fullName || prev.fullName,
+          phoneNumber: user.phoneNumber || prev.phoneNumber,
+        }));
+      }
     } else {
       toast.error('User email not found. Please login again.');
       navigate('/login');
     }
-  }, [navigate]);
+  }, [navigate, user]);
+
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -152,26 +210,26 @@ export const CheckoutPage: React.FC = () => {
                   <p className="font-medium">{item.name}</p>
                   <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
                 </div>
-                <p className="font-medium">${(item.price * item.quantity).toFixed(2)}</p>
+                <p className="font-medium">Rs. {(item.price * item.quantity).toFixed(2)}</p>
               </div>
             ))}
             
             <div className="border-t pt-4 space-y-2">
               <div className="flex justify-between">
                 <span>Subtotal</span>
-                <span>${subtotal.toFixed(2)}</span>
+                <span>Rs. {subtotal.toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Tax</span>
-                <span>${tax.toFixed(2)}</span>
+                <span>Rs. {tax.toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Delivery</span>
-                <span>${deliveryCharge.toFixed(2)}</span>
+                <span>Rs. {deliveryCharge.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-lg font-bold border-t pt-2">
                 <span>Total</span>
-                <span>${total.toFixed(2)}</span>
+                <span>Rs. {total.toFixed(2)}</span>
               </div>
             </div>
           </div>
@@ -274,7 +332,7 @@ export const CheckoutPage: React.FC = () => {
                   disabled={isLoading || !userEmail}
                   className="w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isLoading ? 'Processing...' : `Place Order - $${total.toFixed(2)}`}
+                  {isLoading ? 'Processing...' : `Place Order - Rs. ${total.toFixed(2)}`}
                 </button>
 
                 {!userEmail && (

@@ -8,6 +8,7 @@ interface DecodedToken {
   exp: number;
   iat: number;
   isAdmin?: boolean;
+  userId : string;
 }
 
 const decodeJWT = (token: string): DecodedToken | null => {
@@ -52,25 +53,29 @@ class CartService {
 
   // Helper method to get user email from token
   private getUserEmailFromToken(): string | null {
-    const token = localStorage.getItem('accessToken');
-    if (!token) return null;
-    
-    const decoded = decodeJWT(token);
-    return decoded?.email || decoded?.username || null;
-  }
+  const token = localStorage.getItem('accessToken');
+  if (!token) return null;
+  
+  const decoded = decodeJWT(token);
+  
+  // Try multiple fields that could contain the email/username
+  return decoded?.email || decoded?.username || decoded?.userId || null;
+}
  
   async getCart(): Promise<ICart> {
     try {
-      const userEmail = this.getUserEmailFromToken();
-      if (!userEmail) {
-        throw new Error('User not authenticated');
-      }
+    const userEmail = this.getUserEmailFromToken();
+    console.log('CartService - getUserEmailFromToken result:', userEmail);
+    
+    if (!userEmail) {
+      throw new Error('User not authenticated');
+    }
 
-      const headers = await this.getAuthHeaders();
-      const response = await fetch(`${this.baseURL}/${encodeURIComponent(userEmail)}`, {
-        method: 'GET',
-        headers,
-      });
+    const headers = await this.getAuthHeaders();
+    const response = await fetch(`${this.baseURL}/${encodeURIComponent(userEmail)}`, {
+      method: 'GET',
+      headers,
+    });
 
       if (!response.ok) {
         if (response.status === 401) {

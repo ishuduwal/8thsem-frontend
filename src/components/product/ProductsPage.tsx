@@ -365,7 +365,7 @@ export const ProductsPage = () => {
                 )}
               </div>
               <div className="mt-3 flex items-center justify-between">
-                <span className="text-lg font-bold text-gray-900">${product.price}</span>
+                <span className="text-lg font-bold text-gray-900">Rs. {product.price}</span>
                 {product.stock > 0 ? (
                   <span className="text-sm text-green-600">In Stock ({product.stock})</span>
                 ) : (
@@ -385,7 +385,7 @@ export const ProductsPage = () => {
   };
 
   const renderFilters = () => (
-    <div className="bg-white rounded-sm border border-gray-200 p-4">
+    <div className="bg-white rounded-sm border border-gray-200 p-4 ">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-lg font-medium text-gray-900">Filters</h2>
         {(selectedCategories.length > 0 || priceRange || searchTerm) && (
@@ -461,7 +461,7 @@ export const ProductsPage = () => {
   );
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
       {/* Mobile Filter Toggle Button */}
       <div className="lg:hidden mb-4">
         <button

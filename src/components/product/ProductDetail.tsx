@@ -114,7 +114,7 @@ export const ProductDetail = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
       <div className="flex flex-col lg:flex-row gap-8">
         {/* Product Images Section */}
         <div className="lg:w-1/2">
@@ -181,10 +181,10 @@ export const ProductDetail = () => {
           </div>
 
           <div className="flex items-center mb-4">
-            <span className="text-2xl font-semibold text-gray-900">${product.price}</span>
+            <span className="text-2xl font-semibold text-gray-900">Rs. {product.price}</span>
             {product.originalPrice && product.originalPrice > product.price && (
               <span className="ml-4 text-sm text-gray-500 line-through">
-                ${product.originalPrice}
+                Rs. {product.originalPrice}
               </span>
             )}
           </div>
@@ -248,7 +248,7 @@ export const ProductDetail = () => {
             <button
               onClick={handleAddToCart}
               disabled={!product.stock || product.stock < 1 || isAddingToCart}
-              className="w-full py-2 px-6 rounded-md bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors duration-200 shadow-md hover:shadow-lg disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center"
+              className="w-25 py-2 px-6 rounded-md bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors duration-200 shadow-md hover:shadow-lg disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center"
             >
               {isAddingToCart ? (
                 <>

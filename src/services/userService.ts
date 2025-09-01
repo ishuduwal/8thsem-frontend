@@ -1,6 +1,8 @@
 import API_BASE_URL from "../config/api";
 
 export interface User {
+  phoneNumber: string;
+  fullName: string;
   id: string;
   username: string;
   email: string;

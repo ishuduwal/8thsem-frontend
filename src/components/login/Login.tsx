@@ -50,7 +50,7 @@ function LoginForm() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/dashboard');
+      navigate('/');
     }
     
     // Clear error when component unmounts

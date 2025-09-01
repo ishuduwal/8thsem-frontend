@@ -118,7 +118,7 @@ export const CartItem: React.FC<CartItemProps> = ({ item, onUpdate }) => {
             
             <div className="text-right">
               <span className="font-medium text-base">
-                ${(item.price * quantity).toFixed(2)}
+                Rs. {(item.price * quantity).toFixed(2)}
               </span>
             </div>
           </div>

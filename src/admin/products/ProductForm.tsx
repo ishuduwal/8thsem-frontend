@@ -33,7 +33,7 @@ const ProductForm = ({ isEdit = false }: ProductFormProps) => {
     name: '',
     description: '',
     price: '',
-    stock: '0',
+    stock: '',
     category: '',
     mainImage: null,
     additionalImages: [],
@@ -76,7 +76,7 @@ const ProductForm = ({ isEdit = false }: ProductFormProps) => {
             name: product.name,
             description: product.description || '',
             price: product.price.toString(),
-            stock: product.stock?.toString() || '0',
+            stock: product.stock?.toString() || '',
             category: typeof product.category === 'object'
               ? product.category._id
               : product.category || '',
@@ -127,7 +127,7 @@ const ProductForm = ({ isEdit = false }: ProductFormProps) => {
 
       // Check if adding these files would exceed the limit
       const currentCount = formValues.additionalImages.length;
-      const newFiles = files.slice(0, 3 - currentCount); // Only take what fits
+      const newFiles = files.slice(0, 3 - currentCount); 
 
       if (newFiles.length === 0) {
         toast.error('You can only upload up to 3 additional images');
@@ -194,14 +194,12 @@ const ProductForm = ({ isEdit = false }: ProductFormProps) => {
     formData.append('price', formValues.price);
     formData.append('category', formValues.category);
 
-    // Add stock with a default value (you might want to add this field to your form)
-    formData.append('stock', '0');
+    formData.append('stock', formValues.stock || '0');
 
     if (formValues.mainImage) {
       formData.append('mainImage', formValues.mainImage);
     }
 
-    // Use 'subImages' instead of 'additionalImages' to match backend
     formValues.additionalImages.forEach((file) => {
       formData.append('subImages', file);
     });

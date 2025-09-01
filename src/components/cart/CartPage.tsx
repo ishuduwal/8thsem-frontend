@@ -164,14 +164,14 @@ export const CartPage: React.FC = () => {
                 {/* Subtotal */}
                 <div className="flex justify-between">
                   <span className="text-gray-600">Subtotal</span>
-                  <span className="font-medium">${subtotal.toFixed(2)}</span>
+                  <span className="font-medium">Rs. {subtotal.toFixed(2)}</span>
                 </div>
                 
                 {/* Shipping */}
                 <div className="flex justify-between">
                   <span className="text-gray-600">Shipping</span>
                   <span className="font-medium">
-                    {subtotal > 0 ? '$0.00' : '$0.00'}
+                    {subtotal > 0 ? 'Rs. 0.00' : 'Rs. 0.00'}
                   </span>
                 </div>
                 
@@ -179,7 +179,7 @@ export const CartPage: React.FC = () => {
                 <div className="flex justify-between">
                   <span className="text-gray-600">Tax</span>
                   <span className="font-medium">
-                    {subtotal > 0 ? '$0.00' : '$0.00'}
+                    {subtotal > 0 ? 'Rs. 0.00' : 'Rs. 0.00'}
                   </span>
                 </div>
                 
@@ -187,7 +187,7 @@ export const CartPage: React.FC = () => {
                 <div className="border-t pt-3 sm:pt-4">
                   <div className="flex justify-between text-lg font-semibold">
                     <span>Total</span>
-                    <span>${cartTotal.toFixed(2)}</span>
+                    <span>Rs. {cartTotal.toFixed(2)}</span>
                   </div>
                 </div>
               </div>

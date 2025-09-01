@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import type { ProductReviews } from '../../types/Review';
 import productService from '../../services/productService';
 import { StarRating } from '../StarRating';
-import { getCurrentUser, isAuthenticated } from '../../utils/jwtUtlis';
+import { getCurrentUser, isAuthenticated, isAuthenticatedSync } from '../../utils/jwtUtlis';
 
 interface ProductReviewsProps {
   productId: string;
@@ -17,13 +17,27 @@ export const ProductReview = ({ productId }: ProductReviewsProps) => {
   const [newRating, setNewRating] = useState(0);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
+  const [authChecked, setAuthChecked] = useState(false);
+  const [authenticated, setAuthenticated] = useState(false);
   const navigate = useNavigate();
   const currentUser = getCurrentUser();
-  const authenticated = isAuthenticated();
 
   useEffect(() => {
     fetchReviews();
+    checkAuthentication();
   }, [productId]);
+
+  const checkAuthentication = async () => {
+    try {
+      const isAuth = await isAuthenticated();
+      setAuthenticated(isAuth);
+    } catch (error) {
+      console.error('Auth check failed:', error);
+      setAuthenticated(false);
+    } finally {
+      setAuthChecked(true);
+    }
+  };
 
   const fetchReviews = async () => {
     try {
@@ -37,16 +51,18 @@ export const ProductReview = ({ productId }: ProductReviewsProps) => {
     }
   };
 
-  const requireAuth = (): boolean => {
-    if (!authenticated) {
+  const requireAuth = async (): Promise<boolean> => {
+    const isAuth = await isAuthenticated();
+    if (!isAuth) {
       navigate('/login', { state: { from: window.location.pathname } });
       return false;
     }
+    setAuthenticated(true);
     return true;
   };
 
   const handleAddRating = async () => {
-    if (!requireAuth()) return;
+    if (!(await requireAuth())) return;
 
     if (newRating < 1 || newRating > 5) {
       setError('Rating must be between 1 and 5');
@@ -57,19 +73,21 @@ export const ProductReview = ({ productId }: ProductReviewsProps) => {
       await productService.addRating(productId, { value: newRating });
       setNewRating(0);
       fetchReviews();
+      setError(null);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to add rating';
       setError(errorMessage);
 
       // If it's an authentication error, redirect to login
-      if (errorMessage.includes('not authenticated') || errorMessage.includes('User and rating value are required')) {
+      if (errorMessage.includes('not authenticated') || errorMessage.includes('Unauthorized')) {
+        setAuthenticated(false);
         navigate('/login', { state: { from: window.location.pathname } });
       }
     }
   };
 
   const handleAddComment = async () => {
-    if (!requireAuth()) return;
+    if (!(await requireAuth())) return;
 
     if (!newComment.trim()) {
       setError('Comment cannot be empty');
@@ -80,19 +98,20 @@ export const ProductReview = ({ productId }: ProductReviewsProps) => {
       await productService.addComment(productId, { text: newComment });
       setNewComment('');
       fetchReviews();
+      setError(null);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to add comment';
       setError(errorMessage);
 
-      // If it's an authentication error, redirect to login
-      if (errorMessage.includes('not authenticated') || errorMessage.includes('User and text are required')) {
+      if (errorMessage.includes('not authenticated') || errorMessage.includes('Unauthorized')) {
+        setAuthenticated(false);
         navigate('/login', { state: { from: window.location.pathname } });
       }
     }
   };
 
   const handleAddReply = async (commentId: string) => {
-    if (!requireAuth()) return;
+    if (!(await requireAuth())) return;
 
     if (!replyText.trim()) {
       setError('Reply cannot be empty');
@@ -104,80 +123,85 @@ export const ProductReview = ({ productId }: ProductReviewsProps) => {
       setReplyText('');
       setReplyingTo(null);
       fetchReviews();
+      setError(null);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to add reply';
       setError(errorMessage);
 
-      // If it's an authentication error, redirect to login
-      if (errorMessage.includes('not authenticated') || errorMessage.includes('User and text are required')) {
+      if (errorMessage.includes('not authenticated') || errorMessage.includes('Unauthorized')) {
+        setAuthenticated(false);
         navigate('/login', { state: { from: window.location.pathname } });
       }
     }
   };
 
   const handleLikeComment = async (commentId: string) => {
-    if (!requireAuth()) return;
+    if (!(await requireAuth())) return;
 
     try {
       await productService.likeComment(productId, commentId);
       fetchReviews();
+      setError(null);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to like comment';
       setError(errorMessage);
 
-      // If it's an authentication error, redirect to login
-      if (errorMessage.includes('not authenticated')) {
+      if (errorMessage.includes('not authenticated') || errorMessage.includes('Unauthorized')) {
+        setAuthenticated(false);
         navigate('/login', { state: { from: window.location.pathname } });
       }
     }
   };
 
   const handleLikeReply = async (commentId: string, replyId: string) => {
-    if (!requireAuth()) return;
+    if (!(await requireAuth())) return;
 
     try {
       await productService.likeReply(productId, commentId, replyId);
       fetchReviews();
+      setError(null);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to like reply';
       setError(errorMessage);
 
-      // If it's an authentication error, redirect to login
-      if (errorMessage.includes('not authenticated')) {
+      if (errorMessage.includes('not authenticated') || errorMessage.includes('Unauthorized')) {
+        setAuthenticated(false);
         navigate('/login', { state: { from: window.location.pathname } });
       }
     }
   };
 
   const handleDeleteComment = async (commentId: string) => {
-    if (!requireAuth()) return;
+    if (!(await requireAuth())) return;
 
     try {
       await productService.deleteComment(productId, commentId);
       fetchReviews();
+      setError(null);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to delete comment';
       setError(errorMessage);
 
-      // If it's an authentication error, redirect to login
-      if (errorMessage.includes('not authenticated')) {
+      if (errorMessage.includes('not authenticated') || errorMessage.includes('Unauthorized')) {
+        setAuthenticated(false);
         navigate('/login', { state: { from: window.location.pathname } });
       }
     }
   };
 
   const handleDeleteReply = async (commentId: string, replyId: string) => {
-    if (!requireAuth()) return;
+    if (!(await requireAuth())) return;
 
     try {
       await productService.deleteReply(productId, commentId, replyId);
       fetchReviews();
+      setError(null);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to delete reply';
       setError(errorMessage);
 
-      // If it's an authentication error, redirect to login
-      if (errorMessage.includes('not authenticated')) {
+      if (errorMessage.includes('not authenticated') || errorMessage.includes('Unauthorized')) {
+        setAuthenticated(false);
         navigate('/login', { state: { from: window.location.pathname } });
       }
     }
@@ -206,6 +230,12 @@ export const ProductReview = ({ productId }: ProductReviewsProps) => {
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
           {error}
+          <button 
+            onClick={() => setError(null)} 
+            className="ml-2 text-red-600 hover:text-red-800 underline"
+          >
+            Dismiss
+          </button>
         </div>
       )}
 
@@ -220,7 +250,7 @@ export const ProductReview = ({ productId }: ProductReviewsProps) => {
           </div>
         </div>
 
-        {authenticated ? (
+        {authChecked && authenticated ? (
           <div className="mt-4">
             <h3 className="text-lg font-semibold mb-2">Rate this product</h3>
             <div className="flex items-center mb-2">
@@ -238,16 +268,20 @@ export const ProductReview = ({ productId }: ProductReviewsProps) => {
               Submit Rating
             </button>
           </div>
-        ) : (
+        ) : authChecked ? (
           <div className="mt-4 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
             <p className="text-yellow-800">
               Please <button onClick={() => navigate('/login')} className="text-blue-600 underline">login</button> to rate this product.
             </p>
           </div>
+        ) : (
+          <div className="mt-4">
+            <div className="animate-pulse bg-gray-200 h-8 w-32 rounded"></div>
+          </div>
         )}
       </div>
 
-      {authenticated ? (
+      {authChecked && authenticated ? (
         <div className="mb-6">
           <h3 className="text-lg font-semibold mb-2">Write a review</h3>
           <textarea
@@ -265,11 +299,15 @@ export const ProductReview = ({ productId }: ProductReviewsProps) => {
             Submit Review
           </button>
         </div>
-      ) : (
+      ) : authChecked ? (
         <div className="mb-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
           <p className="text-yellow-800">
             Please <button onClick={() => navigate('/login')} className="text-blue-600 underline">login</button> to write a review.
           </p>
+        </div>
+      ) : (
+        <div className="mb-6">
+          <div className="animate-pulse bg-gray-200 h-20 w-full rounded"></div>
         </div>
       )}
 
@@ -355,15 +393,12 @@ export const ProductReview = ({ productId }: ProductReviewsProps) => {
                 {comment.replies.map((reply) => (
                   <div key={reply._id} className="bg-gray-50 p-3 rounded">
                     <div className="flex justify-between items-center mb-1">
-                      {/* Left side: avatar + username */}
                       <div className="flex items-center gap-1">
                         <div className="flex-shrink-0 h-6 w-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
                           {reply.user?.charAt(0)?.toUpperCase() || 'U'}
                         </div>
                         <h4 className="font-semibold">{reply.user || 'Unknown User'}</h4>
                       </div>
-
-                      {/* Right side: date */}
                       <span className="text-xs text-gray-500">
                         {new Date(reply.createdAt).toLocaleDateString()}
                       </span>

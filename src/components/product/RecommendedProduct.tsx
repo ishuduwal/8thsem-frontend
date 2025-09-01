@@ -90,11 +90,11 @@ export const RecommendedProduct = ({ productId }: RecommendedProductProps) => {
               </p>
               <div className="flex items-center justify-between">
                 <span className="text-xl font-bold text-blue-600">
-                  ${product.price}
+                  Rs. {product.price}
                 </span>
                 {product.originalPrice && product.originalPrice > product.price && (
                   <span className="text-sm text-gray-500 line-through">
-                    ${product.originalPrice}
+                    Rs. {product.originalPrice}
                   </span>
                 )}
               </div>

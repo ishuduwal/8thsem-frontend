@@ -1,3 +1,6 @@
+import { store } from '../store/store'; 
+import { refreshToken, logout } from '../store/slices/authSlice'; 
+
 export interface DecodedToken {
   userId: string;
   username: string;
@@ -33,6 +36,68 @@ export const decodeJWT = (token: string): DecodedToken | null => {
   }
 };
 
+// Helper function to check if token is expired or will expire soon
+const isTokenExpired = (token: string, bufferSeconds: number = 60): boolean => {
+  const decodedToken = decodeJWT(token);
+  if (!decodedToken) return true;
+  
+  const currentTime = Date.now() / 1000;
+  const isExpired = decodedToken.exp <= (currentTime + bufferSeconds);
+  
+  if (isExpired) {
+    console.log('Token expired or expiring soon:', {
+      current: currentTime,
+      exp: decodedToken.exp,
+      expired: isExpired
+    });
+  }
+  
+  return isExpired;
+};
+
+// Enhanced function that automatically refreshes tokens
+export const getValidAccessToken = async (): Promise<string | null> => {
+  const token = localStorage.getItem('accessToken');
+  
+  if (!token) {
+    console.log('No access token found');
+    return null;
+  }
+  
+  // If token is not expired (with 60-second buffer), return it
+  if (!isTokenExpired(token)) {
+    return token;
+  }
+  
+  console.log('Access token expired, attempting refresh...');
+  
+  // Token is expired, try to refresh
+  const refreshTokenValue = localStorage.getItem('refreshToken');
+  if (!refreshTokenValue) {
+    console.log('No refresh token available, logging out');
+    store.dispatch(logout());
+    return null;
+  }
+  
+  // Check if refresh token is also expired
+  if (isTokenExpired(refreshTokenValue, 0)) {
+    console.log('Refresh token also expired, logging out');
+    store.dispatch(logout());
+    return null;
+  }
+  
+  try {
+    // Dispatch refresh token action
+    const result = await store.dispatch(refreshToken()).unwrap();
+    console.log('Token refreshed successfully');
+    return result.accessToken;
+  } catch (error) {
+    console.error('Token refresh failed:', error);
+    store.dispatch(logout());
+    return null;
+  }
+};
+
 export const getCurrentUserEmail = (): string | null => {
   const token = localStorage.getItem('accessToken');
   console.log('Token from localStorage:', token);
@@ -41,9 +106,38 @@ export const getCurrentUserEmail = (): string | null => {
     const decodedToken = decodeJWT(token);
     console.log('Decoded token for email:', decodedToken);
     
-    // Prioritize email, fall back to username if email doesn't exist
-    return decodedToken?.email || decodedToken?.username || null;
+    // If email exists in token, use it
+    if (decodedToken?.email) {
+      return decodedToken.email;
+    }
+    
+    // If username exists and we don't have email, use username as email
+    if (decodedToken?.username) {
+      console.log('Using username as email:', decodedToken.username);
+      return decodedToken.username;
+    }
   }
+  
+  // Fallback: check if we have user data in localStorage (from auth state)
+  try {
+    const authState = localStorage.getItem('persist:root');
+    if (authState) {
+      const parsedAuthState = JSON.parse(authState);
+      const authData = JSON.parse(parsedAuthState.auth);
+      
+      if (authData.user && authData.user.email) {
+        return authData.user.email;
+      }
+      
+      // Also check for username in auth data
+      if (authData.user && authData.user.username) {
+        return authData.user.username;
+      }
+    }
+  } catch (error) {
+    console.error('Error parsing auth state from localStorage:', error);
+  }
+  
   return null;
 };
 
@@ -65,7 +159,14 @@ export const getCurrentUserId = (): string | null => {
   return null;
 };
 
-export const isAuthenticated = (): boolean => {
+// Enhanced authentication check with automatic refresh
+export const isAuthenticated = async (): Promise<boolean> => {
+  const token = await getValidAccessToken();
+  return !!token;
+};
+
+// Synchronous version for immediate checks (doesn't refresh)
+export const isAuthenticatedSync = (): boolean => {
   const token = localStorage.getItem('accessToken');
   console.log('Authentication check - token exists:', !!token);
   
@@ -81,5 +182,35 @@ export const isAuthenticated = (): boolean => {
   const isExpired = decodedToken.exp <= currentTime;
   console.log('Token expired:', isExpired, 'Current time:', currentTime, 'Exp time:', decodedToken.exp);
   
-  return decodedToken.exp > currentTime;
+  return !isExpired;
+};
+
+// Helper function for API calls with automatic token refresh
+export const makeAuthenticatedRequest = async (
+  url: string, 
+  options: RequestInit = {}
+): Promise<Response> => {
+  const token = await getValidAccessToken();
+  
+  if (!token) {
+    throw new Error('No valid authentication token available');
+  }
+  
+  return fetch(url, {
+    ...options,
+    headers: {
+      ...options.headers,
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+};
+
+// Function to check if user is admin
+export const isUserAdmin = (): boolean => {
+  const token = localStorage.getItem('accessToken');
+  if (!token) return false;
+  
+  const decodedToken = decodeJWT(token);
+  return decodedToken?.isAdmin || false;
 };
