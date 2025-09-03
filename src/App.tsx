@@ -26,7 +26,6 @@ import { AdminRoute, AuthOnlyRoute } from "./components/ProtectedRoute";
 import { CartPage } from "./components/cart/CartPage";
 import { AdminOrdersPage } from "./admin/orders/AdminOrdersPage";
 import { CheckoutPage } from "./components/checkout/CheckoutPage";
-import { OrderConfirmationPage } from "./components/order/OrderConfirmationPage";
 import { CustomerOrderHistory } from "./components/order/CustomerOrderHistory";
 import { OrderDetailPage } from "./admin/orders/OrderDetailPage";
 
@@ -64,7 +63,6 @@ function App() {
             <Route path="/products/:id" element={<ProductDetail />} />
             <Route path="/cart" element={<CartPage />} />
             <Route path="/checkout" element={<CheckoutPage />} />
-            <Route path="/orders/:orderId" element={<OrderConfirmationPage />} />
             <Route path="/orders" element={<CustomerOrderHistory />} />
           </Route>
 

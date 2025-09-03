@@ -3,14 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../store/hooks/useCart';
 import { useOrders } from '../../store/hooks/useOrders';
 import { toast } from 'react-toastify';
-import { decodeJWT, getCurrentUserEmail } from '../../utils/jwtUtlis';
+import { getCurrentUser, getCurrentUserId } from '../../utils/jwtUtlis';
 import { useAppSelector } from '../../store/hooks';
 
 export const CheckoutPage: React.FC = () => {
-  const { cart } = useCart();
+  const { cart, clearCart } = useCart();
   const { createOrderFromCart } = useOrders();
   const navigate = useNavigate();
-  const { user } = useAppSelector((state) => state.auth); // Get user from Redux state
+  const { user } = useAppSelector((state) => state.auth);
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -23,61 +23,14 @@ export const CheckoutPage: React.FC = () => {
   const [paymentMethod, setPaymentMethod] = useState<'CASH_ON_DELIVERY' | 'ESEWA'>('CASH_ON_DELIVERY');
   const [notes, setNotes] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [userEmail, setUserEmail] = useState<string>('');
+  const [username, setUsername] = useState<string>('');
 
   useEffect(() => {
-    console.log('Current user email from getCurrentUserEmail():', getCurrentUserEmail());
-  
-  // Debug token
-  const token = localStorage.getItem('accessToken');
-  if (token) {
-    const decoded = decodeJWT(token);
-    console.log('Decoded token:', decoded);
-    console.log('Available fields:', {
-      userId: decoded?.userId,
-      username: decoded?.username,
-      email: decoded?.email,
-      isAdmin: decoded?.isAdmin
-    });
-  }
-    // Try multiple sources to get the user email
-    const getEmail = () => {
-      // 1. First try from Redux auth state
-      if (user?.email) {
-        console.log('Got email from Redux state:', user.email);
-        return user.email;
-      }
-      
-      // 2. Try from JWT token
-      const emailFromToken = getCurrentUserEmail();
-      if (emailFromToken) {
-        console.log('Got email from JWT token:', emailFromToken);
-        return emailFromToken;
-      }
-      
-      // 3. Try from localStorage (auth state)
-      try {
-        const authState = localStorage.getItem('persist:root');
-        if (authState) {
-          const parsedAuthState = JSON.parse(authState);
-          const authData = JSON.parse(parsedAuthState.auth);
-          
-          if (authData.user && authData.user.email) {
-            console.log('Got email from localStorage auth state:', authData.user.email);
-            return authData.user.email;
-          }
-        }
-      } catch (error) {
-        console.error('Error parsing auth state from localStorage:', error);
-      }
-      
-      return null;
-    };
-
-    const email = getEmail();
+    const userName = getCurrentUser();
+    const userId = getCurrentUserId();
     
-    if (email) {
-      setUserEmail(email);
+    if (userId) {
+      setUsername(userName || `User ${userId.substring(0, 6)}`);
       
       // Pre-fill form with user data if available
       if (user) {
@@ -88,11 +41,10 @@ export const CheckoutPage: React.FC = () => {
         }));
       }
     } else {
-      toast.error('User email not found. Please login again.');
+      toast.error('User information not found. Please login again.');
       navigate('/login');
     }
   }, [navigate, user]);
-
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -102,8 +54,9 @@ export const CheckoutPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!userEmail) {
-      toast.error('User email not found. Please login again.');
+    const userId = getCurrentUserId();
+    if (!userId) {
+      toast.error('User information not found. Please login again.');
       return;
     }
 
@@ -114,10 +67,9 @@ export const CheckoutPage: React.FC = () => {
         deliveryAddress: formData,
         paymentMethod,
         notes: notes || undefined,
-        userEmail: userEmail, // Explicitly send userEmail
       };
 
-      console.log('Submitting order with complete data:', orderData);
+      console.log('Submitting order with data:', orderData);
 
       const result = await createOrderFromCart(orderData);
       console.log('Order creation successful:', result);
@@ -142,17 +94,17 @@ export const CheckoutPage: React.FC = () => {
         document.body.appendChild(form);
         form.submit();
       } else {
-        // For cash on delivery, redirect to order confirmation
+        // For cash on delivery, redirect to orders history page
         toast.success('Order created successfully!');
-        navigate(`/orders/${result.order._id}`);
+        clearCart(); // Clear the cart after successful order
+        navigate('/orders'); // Redirect to orders history page
       }
     } catch (error: any) {
       console.error('Order creation error details:', error);
       
-      // Handle specific error cases
       if (error.message.includes('Server error occurred')) {
         toast.error('Server error occurred. Please try again later or contact support.');
-      } else if (error.message.includes('User email not found')) {
+      } else if (error.message.includes('User information not found')) {
         toast.error('Please login again to continue.');
         navigate('/login');
       } else {
@@ -162,14 +114,6 @@ export const CheckoutPage: React.FC = () => {
       setIsLoading(false);
     }
   };
-
-  // Debug information
-  console.log('Checkout page state:', {
-    userEmail,
-    cartItems: cart?.items?.length,
-    formData,
-    paymentMethod
-  });
 
   if (!cart || cart.items.length === 0) {
     return (
@@ -193,10 +137,10 @@ export const CheckoutPage: React.FC = () => {
         <h1 className="text-3xl font-bold mb-8">Checkout</h1>
 
         {/* User Info Display */}
-        {userEmail && (
+        {username && (
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
             <h3 className="font-semibold text-blue-800 mb-2">Ordering as:</h3>
-            <p className="text-blue-700">{userEmail}</p>
+            <p className="text-blue-700">{username}</p>
           </div>
         )}
 
@@ -329,13 +273,13 @@ export const CheckoutPage: React.FC = () => {
 
                 <button
                   type="submit"
-                  disabled={isLoading || !userEmail}
+                  disabled={isLoading || !username}
                   className="w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isLoading ? 'Processing...' : `Place Order - Rs. ${total.toFixed(2)}`}
                 </button>
 
-                {!userEmail && (
+                {!username && (
                   <p className="text-red-600 text-sm">
                     User information not available. Please try logging in again.
                   </p>

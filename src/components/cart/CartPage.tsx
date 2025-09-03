@@ -34,17 +34,16 @@ export const CartPage: React.FC = () => {
   const cartTotal = cart?.total || total; 
 
   useEffect(() => {
-    console.log('CartPage useEffect - isAuthenticated:', isAuthenticated, 'hasAttemptedLoad:', hasAttemptedLoad, 'cart:', cart);
-    
     if (!isAuthenticated) {
-      console.log('User not authenticated, redirecting to login');
       navigate('/login', { state: { from: '/cart' } });
-    } else if (isAuthenticated && !hasAttemptedLoad && !isLoading) {
+    } else if (isAuthenticated && !hasAttemptedLoad) {
       console.log('User authenticated, loading cart');
       refreshCart();
       setHasAttemptedLoad(true);
     }
-  }, [isAuthenticated, navigate, refreshCart, hasAttemptedLoad, cart, isLoading]);
+  }, [isAuthenticated, navigate, refreshCart, hasAttemptedLoad]);
+
+
 
   const handleClearCart = async () => {
     setIsClearing(true);

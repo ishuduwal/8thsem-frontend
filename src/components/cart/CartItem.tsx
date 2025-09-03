@@ -81,7 +81,7 @@ export const CartItem: React.FC<CartItemProps> = ({ item, onUpdate }) => {
             <Link to={`/products/${item.product}`} className="hover:text-indigo-600 transition-colors">
               <h3 className="font-medium text-gray-900 line-clamp-2">{item.name}</h3>
             </Link>
-            <p className="text-gray-600 text-sm mt-1">Unit Price: ${item.price.toFixed(2)}</p>
+            <p className="text-gray-600 text-sm mt-1">Unit Price: Rs. {item.price.toFixed(2)}</p>
           </div>
           
           {/* Mobile: Quantity controls and price */}
@@ -158,7 +158,7 @@ export const CartItem: React.FC<CartItemProps> = ({ item, onUpdate }) => {
         {/* Desktop: Total Price */}
         <div className="hidden sm:block w-24 text-right">
           <span className="font-medium text-lg">
-            ${(item.price * quantity).toFixed(2)}
+            Rs. {(item.price * quantity).toFixed(2)}
           </span>
         </div>
         

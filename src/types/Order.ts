@@ -24,9 +24,8 @@ export interface IDeliveryAddress {
 }
 
 export interface IUserInfo {
-  email: string;
   username: string;
-  _id: string;
+  userId: string;
 }
 
 export interface IOrder {
@@ -54,6 +53,7 @@ export interface OrdersResponse {
   page: number;
   pages: number;
 }
+
 
 export interface CreateOrderResponse {
   order: IOrder;

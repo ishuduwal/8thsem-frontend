@@ -22,6 +22,7 @@ const calculateCartCount = (cart: ICart | null): number => {
   return cart.items.reduce((total, item) => total + item.quantity, 0);
 };
 
+
 // Async thunks
 export const getCart = createAsyncThunk(
   'cart/getCart',
@@ -29,12 +30,12 @@ export const getCart = createAsyncThunk(
     try {
       console.log('Fetching cart from API...');
       const state = getState() as { auth: { isAuthenticated: boolean } };
-      
+
       if (!state.auth.isAuthenticated) {
         console.log('User not authenticated, skipping cart fetch');
         return rejectWithValue('User not authenticated');
       }
-      
+
       const cart = await cartService.getCart();
       console.log('Cart fetched successfully:', cart);
       return cart;
@@ -51,11 +52,11 @@ export const addToCart = createAsyncThunk(
     try {
       console.log('Adding to cart:', productId, quantity);
       const state = getState() as { auth: { isAuthenticated: boolean } };
-      
+
       if (!state.auth.isAuthenticated) {
         return rejectWithValue('Please login to add items to cart');
       }
-      
+
       const cart = await cartService.addToCart(productId, quantity);
       console.log('Item added to cart successfully');
       return cart;
@@ -72,11 +73,11 @@ export const updateCartItem = createAsyncThunk(
     try {
       console.log('Updating cart item:', productId, quantity);
       const state = getState() as { auth: { isAuthenticated: boolean } };
-      
+
       if (!state.auth.isAuthenticated) {
         return rejectWithValue('Please login to update cart');
       }
-      
+
       const cart = await cartService.updateCartItem(productId, quantity);
       console.log('Cart item updated successfully');
       return cart;
@@ -93,11 +94,11 @@ export const removeFromCart = createAsyncThunk(
     try {
       console.log('Removing from cart:', productId);
       const state = getState() as { auth: { isAuthenticated: boolean } };
-      
+
       if (!state.auth.isAuthenticated) {
         return rejectWithValue('Please login to remove items from cart');
       }
-      
+
       const cart = await cartService.removeFromCart(productId);
       console.log('Item removed from cart successfully');
       return cart;
@@ -114,11 +115,11 @@ export const clearCart = createAsyncThunk(
     try {
       console.log('Clearing cart');
       const state = getState() as { auth: { isAuthenticated: boolean } };
-      
+
       if (!state.auth.isAuthenticated) {
         return rejectWithValue('Please login to clear cart');
       }
-      
+
       await cartService.clearCart();
       console.log('Cart cleared successfully');
       return null;
@@ -167,8 +168,8 @@ const cartSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload as string;
         // Don't reset cart on error unless it's auth-related
-        if ((action.payload as string)?.includes('authenticated') || 
-            (action.payload as string)?.includes('401')) {
+        if ((action.payload as string)?.includes('authenticated') ||
+          (action.payload as string)?.includes('401')) {
           state.cart = null;
           state.cartCount = 0;
         }

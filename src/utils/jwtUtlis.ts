@@ -4,7 +4,7 @@ import { refreshToken, logout } from '../store/slices/authSlice';
 export interface DecodedToken {
   userId: string;
   username: string;
-  email?: string;
+  email: string;
   exp: number;
   iat: number;
   isAdmin?: boolean;
@@ -96,49 +96,6 @@ export const getValidAccessToken = async (): Promise<string | null> => {
     store.dispatch(logout());
     return null;
   }
-};
-
-export const getCurrentUserEmail = (): string | null => {
-  const token = localStorage.getItem('accessToken');
-  console.log('Token from localStorage:', token);
-  
-  if (token) {
-    const decodedToken = decodeJWT(token);
-    console.log('Decoded token for email:', decodedToken);
-    
-    // If email exists in token, use it
-    if (decodedToken?.email) {
-      return decodedToken.email;
-    }
-    
-    // If username exists and we don't have email, use username as email
-    if (decodedToken?.username) {
-      console.log('Using username as email:', decodedToken.username);
-      return decodedToken.username;
-    }
-  }
-  
-  // Fallback: check if we have user data in localStorage (from auth state)
-  try {
-    const authState = localStorage.getItem('persist:root');
-    if (authState) {
-      const parsedAuthState = JSON.parse(authState);
-      const authData = JSON.parse(parsedAuthState.auth);
-      
-      if (authData.user && authData.user.email) {
-        return authData.user.email;
-      }
-      
-      // Also check for username in auth data
-      if (authData.user && authData.user.username) {
-        return authData.user.username;
-      }
-    }
-  } catch (error) {
-    console.error('Error parsing auth state from localStorage:', error);
-  }
-  
-  return null;
 };
 
 export const getCurrentUser = (): string | null => {

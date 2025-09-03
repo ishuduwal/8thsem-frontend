@@ -8,7 +8,7 @@ export interface ICartItem {
 
 export interface ICart {
   _id?: string;
-  user: string; // User ID
+  userId: string; // User ID
   items: ICartItem[];
   total: number;
   createdAt?: Date;

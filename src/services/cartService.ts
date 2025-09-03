@@ -1,43 +1,10 @@
 import API_BASE_URL from "../config/api";
 import type { ICart } from "../types/Cart";
-
-// JWT decode utility
-interface DecodedToken {
-  username: string;
-  email?: string;
-  exp: number;
-  iat: number;
-  isAdmin?: boolean;
-  userId : string;
-}
-
-const decodeJWT = (token: string): DecodedToken | null => {
-  try {
-    const base64Url = token.split('.')[1];
-    if (!base64Url) {
-      return null;
-    }
-        
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(
-      atob(base64)
-        .split('')
-        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-        .join('')
-    );
-        
-    const decoded = JSON.parse(jsonPayload) as DecodedToken;
-    return decoded;
-  } catch (error) {
-    console.error('Error decoding JWT:', error);
-    return null;
-  }
-};
+import { getCurrentUserId } from "../utils/jwtUtlis";
 
 class CartService {
   private baseURL = `${API_BASE_URL}/cart`;
      
-  // Helper method to get headers with authentication
   private async getAuthHeaders(): Promise<HeadersInit> {
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
@@ -51,54 +18,53 @@ class CartService {
     return headers;
   }
 
-  // Helper method to get user email from token
-  private getUserEmailFromToken(): string | null {
-  const token = localStorage.getItem('accessToken');
-  if (!token) return null;
-  
-  const decoded = decodeJWT(token);
-  
-  // Try multiple fields that could contain the email/username
-  return decoded?.email || decoded?.username || decoded?.userId || null;
-}
+  private getUserIdFromToken(): string | null {
+    return getCurrentUserId();
+  }
  
   async getCart(): Promise<ICart> {
-    try {
-    const userEmail = this.getUserEmailFromToken();
-    console.log('CartService - getUserEmailFromToken result:', userEmail);
+  try {
+    const userId = this.getUserIdFromToken();
     
-    if (!userEmail) {
-      throw new Error('User not authenticated');
+    if (!userId) {
+      throw new Error('User not authenticated - no user ID found in token');
     }
 
     const headers = await this.getAuthHeaders();
-    const response = await fetch(`${this.baseURL}/${encodeURIComponent(userEmail)}`, {
+    const response = await fetch(`${this.baseURL}/${encodeURIComponent(userId)}`, {
       method: 'GET',
       headers,
     });
 
-      if (!response.ok) {
-        if (response.status === 401) {
-          throw new Error('Please login to access your cart');
-        }
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to fetch cart');
+    if (!response.ok) {
+      if (response.status === 500) {
+        // Handle server errors gracefully
+        return { userId, items: [], total: 0 };
       }
-
-      const data = await response.json();
-      return data.cart || data; // Handle different response structures
-    } catch (error) {
-      if (error instanceof Error) {
-        throw error;
+      
+      let errorData;
+      try {
+        errorData = await response.json();
+      } catch (jsonError) {
+        throw new Error(`Server error: ${response.status} ${response.statusText}`);
       }
-      throw new Error('Error fetching cart: Unknown error');
+      throw new Error(errorData.message || 'Failed to fetch cart');
     }
+
+    const data = await response.json();
+    return data.cart || data;
+  } catch (error) {
+    console.error('Error fetching cart, returning empty cart:', error);
+    // Return empty cart instead of throwing error
+    const userId = this.getUserIdFromToken();
+    return { userId: userId || '', items: [], total: 0 };
   }
+}
 
   async addToCart(productId: string, quantity: number): Promise<ICart> {
     try {
-      const userEmail = this.getUserEmailFromToken();
-      if (!userEmail) {
+      const userId = this.getUserIdFromToken();
+      if (!userId) {
         throw new Error('Please login to add items to cart');
       }
 
@@ -107,7 +73,7 @@ class CartService {
         method: 'POST',
         headers,
         body: JSON.stringify({ 
-          userEmail, 
+          userId, 
           productId, 
           quantity 
         }),
@@ -133,8 +99,8 @@ class CartService {
 
   async updateCartItem(productId: string, quantity: number): Promise<ICart> {
     try {
-      const userEmail = this.getUserEmailFromToken();
-      if (!userEmail) {
+      const userId = this.getUserIdFromToken();
+      if (!userId) {
         throw new Error('Please login to update cart');
       }
 
@@ -143,7 +109,7 @@ class CartService {
         method: 'PUT',
         headers,
         body: JSON.stringify({ 
-          userEmail, 
+          userId, 
           productId, 
           quantity 
         }),
@@ -166,8 +132,8 @@ class CartService {
 
   async removeFromCart(productId: string): Promise<ICart> {
     try {
-      const userEmail = this.getUserEmailFromToken();
-      if (!userEmail) {
+      const userId = this.getUserIdFromToken();
+      if (!userId) {
         throw new Error('Please login to remove items from cart');
       }
 
@@ -176,7 +142,7 @@ class CartService {
         method: 'DELETE',
         headers,
         body: JSON.stringify({ 
-          userEmail, 
+          userId, 
           productId 
         }),
       });
@@ -198,13 +164,13 @@ class CartService {
 
   async clearCart(): Promise<void> {
     try {
-      const userEmail = this.getUserEmailFromToken();
-      if (!userEmail) {
+      const userId = this.getUserIdFromToken();
+      if (!userId) {
         throw new Error('Please login to clear cart');
       }
 
       const headers = await this.getAuthHeaders();
-      const response = await fetch(`${this.baseURL}/clear/${encodeURIComponent(userEmail)}`, {
+      const response = await fetch(`${this.baseURL}/clear/${encodeURIComponent(userId)}`, {
         method: 'DELETE',
         headers,
       });
@@ -223,13 +189,13 @@ class CartService {
 
   async getCartCount(): Promise<number> {
     try {
-      const userEmail = this.getUserEmailFromToken();
-      if (!userEmail) {
+      const userId = this.getUserIdFromToken();
+      if (!userId) {
         return 0;
       }
 
       const headers = await this.getAuthHeaders();
-      const response = await fetch(`${this.baseURL}/count/${encodeURIComponent(userEmail)}`, {
+      const response = await fetch(`${this.baseURL}/count/${encodeURIComponent(userId)}`, {
         method: 'GET',
         headers,
       });

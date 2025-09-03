@@ -1,13 +1,10 @@
 import API_BASE_URL from "../config/api";
 import type { IOrder, CreateOrderData, OrdersResponse, CreateOrderResponse } from "../types/Order";
-import { decodeJWT, getCurrentUserEmail } from "../utils/jwtUtlis";
+import { getCurrentUserId, getCurrentUser } from "../utils/jwtUtlis";
 
 class OrderService {
   private baseURL = `${API_BASE_URL}/order`;
-  handleEsewaSuccess: any;
-  handleEsewaFailure: any;
   
-  // Helper method to get headers with authentication
   private async getAuthHeaders(): Promise<HeadersInit> {
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
@@ -22,31 +19,23 @@ class OrderService {
   }
 
   async createOrderFromCart(orderData: CreateOrderData): Promise<CreateOrderResponse> {
-     try {
-    let userEmail = getCurrentUserEmail();
-    
-    // If getCurrentUserEmail returns null, try alternative approaches
-    if (!userEmail) {
-      // Try to get from token directly
-      const token = localStorage.getItem('accessToken');
-      if (token) {
-        const decodedToken = decodeJWT(token);
-        userEmail = decodedToken?.email || decodedToken?.username || '';
-      }
+    try {
+      const userId = getCurrentUserId();
+      const username = getCurrentUser();
       
-      if (!userEmail) {
-        throw new Error('User email not found. Please login again.');
+      if (!userId) {
+        throw new Error('User information not found. Please login again.');
       }
-    }
+      const userUsername = username || `user_${userId.substring(0, 8)}`;
+      const headers = await this.getAuthHeaders();
+      
+      const requestBody = {
+        userId,
+        username: userUsername,
+        ...orderData,
+      };
 
-    const headers = await this.getAuthHeaders();
-    
-    const requestBody = {
-      ...orderData,
-      userEmail
-    };
-
-    console.log('Creating order with data:', requestBody);
+      console.log('Creating order with data:', requestBody);
 
       const response = await fetch(`${this.baseURL}/from-cart`, {
         method: 'POST',
@@ -74,9 +63,9 @@ class OrderService {
 
       return await response.json();
     } catch (error) {
-    console.error('Order creation error details:', error);
-    throw new Error(`Error creating order: ${error instanceof Error ? error.message : 'Unknown error'}`);
-  }
+      console.error('Order creation error details:', error);
+      throw new Error(`Error creating order: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   }
 
   async createOrder(orderData: any): Promise<CreateOrderResponse> {
@@ -99,21 +88,37 @@ class OrderService {
     }
   }
 
-  async getOrdersByUser(email: string, page: number = 1, limit: number = 10): Promise<OrdersResponse> {
+  async getOrdersByUser(userId: string, page: number = 1, limit: number = 10): Promise<OrdersResponse> {
     try {
+      console.log('OrderService: Fetching orders for user:', userId, 'page:', page, 'limit:', limit);
+      
       const headers = await this.getAuthHeaders();
-      const response = await fetch(`${this.baseURL}/user/${email}?page=${page}&limit=${limit}`, {
+      const url = `${this.baseURL}/user/${userId}?page=${page}&limit=${limit}`;
+      console.log('OrderService: Making request to:', url);
+      
+      const response = await fetch(url, {
         method: 'GET',
         headers,
       });
 
+      console.log('OrderService: Response status:', response.status);
+
       if (!response.ok) {
-        const errorData = await response.json();
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch (jsonError) {
+          const textResponse = await response.text();
+          throw new Error(textResponse || `Server error: ${response.status} ${response.statusText}`);
+        }
         throw new Error(errorData.message || 'Failed to fetch orders');
       }
 
-      return await response.json();
+      const data = await response.json();
+      console.log('OrderService: Received data:', data);
+      return data;
     } catch (error) {
+      console.error('OrderService: Error fetching orders:', error);
       throw new Error(`Error fetching orders: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
@@ -221,7 +226,12 @@ class OrderService {
     }
   }
 
-  // Handle eSewa payment failure (for frontend handling)
+  // Handle eSewa success - METHOD PROPERLY IMPLEMENTED
+  async handleEsewaSuccess(data: string): Promise<any> {
+    return this.processEsewaPayment(data);
+  }
+
+  // Handle eSewa payment failure (for frontend handling) - FIXED METHOD NAME
   async processEsewaFailure(transaction_uuid: string): Promise<any> {
     try {
       const response = await fetch(`${this.baseURL}/esewa/failure?transaction_uuid=${transaction_uuid}`, {
@@ -240,9 +250,12 @@ class OrderService {
     }
   }
 
+  // Handle eSewa failure - METHOD PROPERLY IMPLEMENTED
+  async handleEsewaFailure(transaction_uuid: string): Promise<any> {
+    return this.processEsewaFailure(transaction_uuid);
+  }
 
   openEsewaPayment(paymentData: any): Window | null {
-
     const form = document.createElement('form');
     form.method = 'POST';
     form.action = paymentData.gateway_url;

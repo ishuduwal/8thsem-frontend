@@ -27,9 +27,11 @@ export const createOrderFromCart = createAsyncThunk(
   'order/createOrderFromCart',
   async (orderData: CreateOrderData, { rejectWithValue }) => {
     try {
-      return await orderService.createOrderFromCart(orderData);
+      const response = await orderService.createOrderFromCart(orderData);
+      return response;
     } catch (error: any) {
-      return rejectWithValue(error.message);
+      console.error('Create order error:', error);
+      return rejectWithValue(error.message || 'Failed to create order');
     }
   }
 );
@@ -38,20 +40,26 @@ export const createOrder = createAsyncThunk(
   'order/createOrder',
   async (orderData: any, { rejectWithValue }) => {
     try {
-      return await orderService.createOrder(orderData);
+      const response = await orderService.createOrder(orderData);
+      return response;
     } catch (error: any) {
-      return rejectWithValue(error.message);
+      console.error('Create order error:', error);
+      return rejectWithValue(error.message || 'Failed to create order');
     }
   }
 );
 
 export const getOrdersByUser = createAsyncThunk(
   'order/getOrdersByUser',
-  async ({ email, page = 1, limit = 10 }: { email: string; page?: number; limit?: number }, { rejectWithValue }) => {
+  async ({ userId, page = 1, limit = 10 }: { userId: string; page?: number; limit?: number }, { rejectWithValue }) => {
     try {
-      return await orderService.getOrdersByUser(email, page, limit);
+      console.log('Fetching orders for user:', userId, 'page:', page, 'limit:', limit);
+      const response = await orderService.getOrdersByUser(userId, page, limit);
+      console.log('Orders response received:', response);
+      return response;
     } catch (error: any) {
-      return rejectWithValue(error.message);
+      console.error('Get orders by user error:', error);
+      return rejectWithValue(error.message || 'Failed to fetch orders');
     }
   }
 );
@@ -60,9 +68,11 @@ export const getOrderById = createAsyncThunk(
   'order/getOrderById',
   async (orderId: string, { rejectWithValue }) => {
     try {
-      return await orderService.getOrderById(orderId);
+      const response = await orderService.getOrderById(orderId);
+      return response;
     } catch (error: any) {
-      return rejectWithValue(error.message);
+      console.error('Get order by ID error:', error);
+      return rejectWithValue(error.message || 'Failed to fetch order');
     }
   }
 );
@@ -71,9 +81,11 @@ export const checkPaymentStatus = createAsyncThunk(
   'order/checkPaymentStatus',
   async (orderId: string, { rejectWithValue }) => {
     try {
-      return await orderService.checkPaymentStatus(orderId);
+      const response = await orderService.checkPaymentStatus(orderId);
+      return response;
     } catch (error: any) {
-      return rejectWithValue(error.message);
+      console.error('Check payment status error:', error);
+      return rejectWithValue(error.message || 'Failed to check payment status');
     }
   }
 );
@@ -82,9 +94,11 @@ export const updateOrderStatus = createAsyncThunk(
   'order/updateOrderStatus',
   async ({ orderId, status }: { orderId: string; status: string }, { rejectWithValue }) => {
     try {
-      return await orderService.updateOrderStatus(orderId, status);
+      const response = await orderService.updateOrderStatus(orderId, status);
+      return response;
     } catch (error: any) {
-      return rejectWithValue(error.message);
+      console.error('Update order status error:', error);
+      return rejectWithValue(error.message || 'Failed to update order status');
     }
   }
 );
@@ -93,9 +107,11 @@ export const getAllOrders = createAsyncThunk(
   'order/getAllOrders',
   async ({ page = 1, limit = 10, status }: { page?: number; limit?: number; status?: string }, { rejectWithValue }) => {
     try {
-      return await orderService.getAllOrders(page, limit, status);
+      const response = await orderService.getAllOrders(page, limit, status);
+      return response;
     } catch (error: any) {
-      return rejectWithValue(error.message);
+      console.error('Get all orders error:', error);
+      return rejectWithValue(error.message || 'Failed to fetch orders');
     }
   }
 );
@@ -104,9 +120,11 @@ export const processEsewaSuccess = createAsyncThunk(
   'order/processEsewaSuccess',
   async (data: string, { rejectWithValue }) => {
     try {
-      return await orderService.handleEsewaSuccess(data);
+      const response = await orderService.processEsewaPayment(data);
+      return response;
     } catch (error: any) {
-      return rejectWithValue(error.message);
+      console.error('Process eSewa success error:', error);
+      return rejectWithValue(error.message || 'Failed to process eSewa payment');
     }
   }
 );
@@ -115,9 +133,11 @@ export const processEsewaFailure = createAsyncThunk(
   'order/processEsewaFailure',
   async (transaction_uuid: string, { rejectWithValue }) => {
     try {
-      return await orderService.handleEsewaFailure(transaction_uuid);
+      const response = await orderService.processEsewaFailure(transaction_uuid);
+      return response;
     } catch (error: any) {
-      return rejectWithValue(error.message);
+      console.error('Process eSewa failure error:', error);
+      return rejectWithValue(error.message || 'Failed to process eSewa failure');
     }
   }
 );
@@ -173,22 +193,31 @@ const orderSlice = createSlice({
         state.error = action.payload as string;
       })
 
-      // Get Orders by User
+      // Get Orders by User - FIXED
       .addCase(getOrdersByUser.pending, (state) => {
         state.isLoading = true;
         state.error = null;
       })
       .addCase(getOrdersByUser.fulfilled, (state, action) => {
+        console.log('getOrdersByUser fulfilled with payload:', action.payload);
         state.isLoading = false;
-        state.orders = action.payload.orders;
-        state.total = action.payload.total;
-        state.pages = action.payload.pages;
-        state.page = action.payload.page;
+        // Make sure we're accessing the correct properties from the response
+        const response = action.payload as OrdersResponse;
+        state.orders = response.orders || [];
+        state.total = response.total || 0;
+        state.pages = response.pages || 1;
+        state.page = response.page || 1;
         state.error = null;
       })
       .addCase(getOrdersByUser.rejected, (state, action) => {
+        console.log('getOrdersByUser rejected with error:', action.payload);
         state.isLoading = false;
         state.error = action.payload as string;
+        // Reset orders on error
+        state.orders = [];
+        state.total = 0;
+        state.pages = 1;
+        state.page = 1;
       })
 
       // Get Order by ID
@@ -247,15 +276,20 @@ const orderSlice = createSlice({
       })
       .addCase(getAllOrders.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.orders = action.payload.orders;
-        state.total = action.payload.total;
-        state.pages = action.payload.pages;
-        state.page = action.payload.page;
+        const response = action.payload as OrdersResponse;
+        state.orders = response.orders || [];
+        state.total = response.total || 0;
+        state.pages = response.pages || 1;
+        state.page = response.page || 1;
         state.error = null;
       })
       .addCase(getAllOrders.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
+        state.orders = [];
+        state.total = 0;
+        state.pages = 1;
+        state.page = 1;
       })
 
       // Process eSewa Success

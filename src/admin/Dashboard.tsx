@@ -15,7 +15,8 @@ import {
   PlusSquare,
   TrendingUp,
   CreditCard,
-  Award
+  Award,
+  Package
 } from 'lucide-react';
 
 export const Dashboard: React.FC = () => {
@@ -212,7 +213,7 @@ export const Dashboard: React.FC = () => {
                   </div>
                   <div>
                     <h3 className="text-gray-500 text-sm font-medium uppercase">Revenue</h3>
-                    <p className="text-2xl font-bold text-gray-800">${timeRangeStats.revenue.toLocaleString()}</p>
+                    <p className="text-2xl font-bold text-gray-800">Rs. {timeRangeStats.revenue.toLocaleString()}</p>
                   </div>
                 </div>
               </div>
@@ -220,7 +221,7 @@ export const Dashboard: React.FC = () => {
               <div className="bg-white rounded-sm shadow-sm p-6 border-l-4 border-green-500 hover:shadow-xl transition-shadow">
                 <div className="flex items-center">
                   <div className="bg-green-100 rounded-full p-3 mr-4">
-                    <List className="w-6 h-6 text-green-600" />
+                    <ShoppingCart className="w-6 h-6 text-green-600" />
                   </div>
                   <div>
                     <h3 className="text-gray-500 text-sm font-medium uppercase">Orders</h3>
@@ -244,7 +245,7 @@ export const Dashboard: React.FC = () => {
               <div className="bg-white rounded-sm shadow-sm p-6 border-l-4 border-orange-500 hover:shadow-xl transition-shadow">
                 <div className="flex items-center">
                   <div className="bg-orange-100 rounded-full p-3 mr-4">
-                    <PlusSquare className="w-6 h-6 text-orange-600" />
+                    <Package className="w-6 h-6 text-orange-600" />
                   </div>
                   <div>
                     <h3 className="text-gray-500 text-sm font-medium uppercase">New Products</h3>
@@ -356,7 +357,7 @@ export const Dashboard: React.FC = () => {
                 />
                 <div className="text-center">
                   <h4 className="font-semibold text-gray-800 mb-2 line-clamp-2 text-sm">{product.productName}</h4>
-                  <p className="text-xl font-bold text-green-600">${product.price.toFixed(2)}</p>
+                  <p className="text-xl font-bold text-green-600">Rs. {product.price.toFixed(2)}</p>
                 </div>
               </div>
             ))}

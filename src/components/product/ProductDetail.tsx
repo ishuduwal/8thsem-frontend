@@ -7,6 +7,7 @@ import { RecommendedProduct } from './RecommendedProduct';
 import { StarRating } from '../StarRating';
 import { useCart } from '../../store/hooks/useCart';
 import { useAppSelector } from '../../store/hooks';
+import { toast } from 'react-toastify';
 
 export const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -59,7 +60,7 @@ export const ProductDetail = () => {
     if (!product || !id) return;
     
     if (!isAuthenticated) {
-      alert('Please login to add items to cart');
+      toast.error('Please login to add items to cart');
       navigate('/login');
       return;
     }
@@ -67,17 +68,17 @@ export const ProductDetail = () => {
     setIsAddingToCart(true);
     try {
       await addToCart(id, quantity); // Use id from useParams instead of product._id
-      alert(`Added ${quantity} ${product.name} to cart`);
+      toast.success(`Added ${quantity} ${product.name} to cart`);
     } catch (err) {
       if (err instanceof Error) {
         if (err.message.includes('login') || err.message.includes('authenticated')) {
-          alert('Please login to add items to cart');
+          toast.error('Please login to add items to cart');
           navigate('/login');
         } else {
-          alert(`Failed to add to cart: ${err.message}`);
+          toast.error(`Failed to add to cart: ${err.message}`);
         }
       } else {
-        alert('Failed to add to cart. Please try again.');
+        toast.error('Failed to add to cart. Please try again.');
       }
       console.error('Add to cart error:', err);
     } finally {
