@@ -60,12 +60,12 @@ export const ProductsPage = () => {
   // Price ranges
   const priceRanges = [
     { label: 'All Prices', value: '' },
-    { label: '$0 - $46', value: '0-46' },
-    { label: '$46 - $84', value: '46-84' },
-    { label: '$84 - $123', value: '84-123' },
-    { label: '$123 - $161', value: '123-161' },
-    { label: '$161 - $200', value: '161-200' },
-    { label: '$200+', value: '200-' },
+    { label: 'Rs. 0 - Rs. 46', value: '0-46' },
+    { label: 'Rs. 46 - Rs. 84', value: '46-84' },
+    { label: 'Rs. 84 - Rs. 123', value: '84-123' },
+    { label: 'Rs. 123 - Rs. $161', value: '123-161' },
+    { label: 'Rs. 161 - Rs. 200', value: '161-200' },
+    { label: 'Rs. 200+', value: '200-' },
   ];
 
   // Sort options
@@ -126,73 +126,114 @@ export const ProductsPage = () => {
     fetchProducts();
   }, [searchParams]);
 
-  const fetchProducts = async () => {
-    try {
-      setIsLoading(true);
-      
-      // Build query parameters object
-      const filters: ProductFilters = {
-        page: currentPage,
-      };
-      
-      if (selectedCategories.length > 0) {
-        filters.category = selectedCategories.join(',');
-      }
-      
-      if (priceRange) {
-        filters.price = priceRange;
-      }
-      
-      if (sortBy !== 'newest') {
-        filters.sort = sortBy;
-      }
-      
-      if (searchTerm) {
-        filters.search = searchTerm;
-      }
-      
-      // Use the productService instead of direct fetch
-      const response = await productService.getAllProducts(filters);
-      
-      setProducts(response.products || []);
-      setTotalPages(response.pages || 1);
-      setTotalProducts(response.total || 0);
-      setCurrentPage(response.page || 1);
-      
-    } catch (error) {
-      console.error('Error fetching products:', error);
-      setProducts([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+useEffect(() => {
+  const categoryParam = searchParams.get('category');
+  const priceParam = searchParams.get('price');
+  const sortParam = searchParams.get('sort');
+  const searchParam = searchParams.get('search');
+  const pageParam = searchParams.get('page');
+  
+  if (categoryParam) {
+    setSelectedCategories(categoryParam.split(',').filter(Boolean));
+  }
+  
+  if (priceParam) {
+    setPriceRange(priceParam);
+  }
+  
+  if (sortParam) {
+    setSortBy(sortParam);
+  }
+  
+  if (searchParam) {
+    setSearchTerm(searchParam);
+  }
+  
+  if (pageParam) {
+    setCurrentPage(parseInt(pageParam) || 1);
+  }
+  
+  // Fetch products after initializing filters
+  fetchProducts();
+}, [searchParams]);
 
-  const updateURL = () => {
-    const params = new URLSearchParams();
+// Update the fetchProducts function to use URL parameters:
+const fetchProducts = async () => {
+  try {
+    setIsLoading(true);
     
-    if (selectedCategories.length > 0) {
-      params.set('category', selectedCategories.join(','));
+    // Get current values from URL params
+    const categoryParam = searchParams.get('category');
+    const priceParam = searchParams.get('price');
+    const sortParam = searchParams.get('sort');
+    const searchParam = searchParams.get('search');
+    const pageParam = searchParams.get('page');
+    
+    // Build query parameters object using URL params
+    const filters: ProductFilters = {
+      page: pageParam ? parseInt(pageParam) || 1 : 1,
+    };
+    
+    if (categoryParam) {
+      filters.category = categoryParam;
     }
     
-    if (priceRange) {
-      params.set('price', priceRange);
+    if (priceParam) {
+      filters.price = priceParam;
     }
     
-    if (sortBy !== 'newest') {
-      params.set('sort', sortBy);
+    if (sortParam && sortParam !== 'newest') {
+      filters.sort = sortParam;
     }
     
-    if (searchTerm) {
-      params.set('search', searchTerm);
+    if (searchParam && searchParam.trim()) {
+      filters.search = searchParam.trim();
     }
     
-    // Reset to page 1 when filters change
-    params.set('page', '1');
-    setCurrentPage(1);
+    console.log('Fetching products with filters:', filters);
     
-    setSearchParams(params);
-  };
+    const response = await productService.getAllProducts(filters);
+    
+    setProducts(response.products || []);
+    setTotalPages(response.pages || 1);
+    setTotalProducts(response.total || 0);
+    setCurrentPage(response.page || 1);
+    
+  } catch (error) {
+    console.error('Error fetching products:', error);
+    setProducts([]);
+    setTotalProducts(0);
+    setTotalPages(1);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
+const updateURL = () => {
+  const params = new URLSearchParams();
+  
+  if (selectedCategories.length > 0) {
+    params.set('category', selectedCategories.join(','));
+  }
+  
+  if (priceRange) {
+    params.set('price', priceRange);
+  }
+  
+  if (sortBy !== 'newest') {
+    params.set('sort', sortBy);
+  }
+  
+  if (searchTerm && searchTerm.trim()) {
+    params.set('search', searchTerm.trim());
+  }
+  
+  // Reset to page 1 when filters change (except when just changing page)
+  params.set('page', '1');
+  setCurrentPage(1);
+  
+  setSearchParams(params);
+};
   const handleCategoryChange = (categoryId: string) => {
     const newSelectedCategories = selectedCategories.includes(categoryId)
       ? selectedCategories.filter(id => id !== categoryId)
@@ -339,7 +380,7 @@ export const ProductsPage = () => {
     }
 
     return (
-      <div className={`${viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'flex flex-col'} gap-6`}>
+      <div className={`${viewMode === 'grid' ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4' : 'flex flex-col'} gap-6`}>
         {products.map((product) => (
           <div
             key={product._id}

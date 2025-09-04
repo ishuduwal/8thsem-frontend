@@ -15,7 +15,14 @@ export interface Product {
   ratings?: Rating[];
   stock: number;
 }
-
+export interface ProductFilters {
+  page?: number;
+  search?: string;
+  category?: string;
+  price?: string;
+  sort?: string;
+  limit?: number; // Add this line
+}
 export interface ProductResponse {
   products: Product[];
   total: number;

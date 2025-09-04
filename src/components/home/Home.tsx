@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import imgOne from '../../assets/img-one.png';
 import imgTwo from '../../assets/img-two.png';
 import imgThree from '../../assets/img-three.png';
+import FeaturedProducts from "./FeaturedProducts";
 
 export const Home = () => {
   const [currentSlide, setCurrentSlide] = useState<number>(0);
@@ -187,9 +188,8 @@ export const Home = () => {
         </button> */}
       </div>
 
-      <div className="container mx-auto px-4 py-8 mt-8">
-        <h2 className="text-2xl font-bold mb-6">Featured Products</h2>
-        {/* Featured products content will go here */}
+      <div className="container mx-auto px-4 py-8">
+        <FeaturedProducts />
       </div>
     </div>
   );

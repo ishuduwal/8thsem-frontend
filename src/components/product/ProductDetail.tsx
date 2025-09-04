@@ -24,27 +24,27 @@ export const ProductDetail = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchProduct = async () => {
-      if (!id) {
-        setError('Product ID is required');
-        setLoading(false);
-        return;
-      }
-      
-      try {
-        setLoading(true);
-        const response = await productService.getProductById(id);
-        setProduct(response.data);
-        setSelectedImage(response.data.mainImage);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchProduct = async () => {
+    if (!id) {
+      setError('Product ID is required');
+      setLoading(false);
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      const response = await productService.getProductById(id);
+      setProduct(response.data);
+      setSelectedImage(response.data.mainImage);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchProduct();
-  }, [id]);
+  fetchProduct();
+}, [id]);
 
   const handleImageSelect = (imageUrl: string) => {
     setSelectedImage(imageUrl);

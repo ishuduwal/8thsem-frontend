@@ -13,18 +13,18 @@ export interface ProductFilters {
 
 class ProductService {
   private baseURL = `${API_BASE_URL}/products`;
-  
+
   // Helper method to get headers with authentication
   private async getAuthHeaders(): Promise<HeadersInit> {
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
     };
-    
+
     const token = localStorage.getItem('accessToken');
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
-    
+
     return headers;
   }
 
@@ -57,37 +57,37 @@ class ProductService {
   async getAllProducts(filters: ProductFilters = {}): Promise<ProductResponse> {
     try {
       const url = new URL(this.baseURL);
-      
+
       // Add all filters to the URL
       if (filters.page) {
         url.searchParams.append('page', filters.page.toString());
       }
-      
+
       if (filters.search) {
         url.searchParams.append('search', filters.search);
       }
-      
+
       if (filters.category) {
         url.searchParams.append('category', filters.category);
       }
-      
+
       if (filters.price) {
         url.searchParams.append('price', filters.price);
       }
-      
+
       if (filters.sort) {
         url.searchParams.append('sort', filters.sort);
       }
 
       const response = await fetch(url.toString());
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Failed to fetch products');
       }
 
       const data = await response.json();
-      
+
       return {
         products: data.products || [],
         total: data.total || 0,
@@ -178,7 +178,7 @@ class ProductService {
     try {
       const username = this.getCurrentUsername();
       const headers = await this.getAuthHeaders();
-      
+
       const payload = {
         ...ratingData,
         user: username
@@ -205,7 +205,7 @@ class ProductService {
     try {
       const username = this.getCurrentUsername();
       const headers = await this.getAuthHeaders();
-      
+
       const payload = {
         ...commentData,
         user: username
@@ -232,7 +232,7 @@ class ProductService {
     try {
       const username = this.getCurrentUsername();
       const headers = await this.getAuthHeaders();
-      
+
       const payload = {
         ...replyData,
         user: username
@@ -259,7 +259,7 @@ class ProductService {
     try {
       const username = this.getCurrentUsername();
       const headers = await this.getAuthHeaders();
-      
+
       const response = await fetch(`${this.baseURL}/${productId}/comments/${commentId}/like`, {
         method: 'POST',
         headers,
@@ -281,7 +281,7 @@ class ProductService {
     try {
       const username = this.getCurrentUsername();
       const headers = await this.getAuthHeaders();
-      
+
       const response = await fetch(`${this.baseURL}/${productId}/comments/${commentId}/replies/${replyId}/like`, {
         method: 'POST',
         headers,
@@ -303,7 +303,7 @@ class ProductService {
     try {
       const username = this.getCurrentUsername();
       const headers = await this.getAuthHeaders();
-      
+
       const response = await fetch(`${this.baseURL}/${productId}/comments/${commentId}`, {
         method: 'DELETE',
         headers,
@@ -325,7 +325,7 @@ class ProductService {
     try {
       const username = this.getCurrentUsername();
       const headers = await this.getAuthHeaders();
-      
+
       const response = await fetch(`${this.baseURL}/${productId}/comments/${commentId}/replies/${replyId}`, {
         method: 'DELETE',
         headers,
@@ -356,6 +356,60 @@ class ProductService {
       throw new Error(`Error fetching product reviews: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
+  async getFeaturedProducts(): Promise<{ data: Product[] }> {
+    try {
+      const response = await fetch(`${this.baseURL}/featured/products`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to fetch featured products');
+      }
+
+      const products = await response.json();
+      return { data: products };
+    } catch (error) {
+      throw new Error(`Error fetching featured products: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+  async getSearchSuggestions(query: string): Promise<{ data: Product[] }> {
+  try {
+    // console.log('ProductService: Fetching suggestions for query:', query);
+    
+    const url = new URL(`${this.baseURL}/search/suggestions`);
+    url.searchParams.append('q', query);
+    url.searchParams.append('limit', '5');
+
+    // console.log('ProductService: Request URL:', url.toString());
+
+    const response = await fetch(url.toString());
+    
+    // console.log('ProductService: Response status:', response.status);
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('ProductService: Error response:', errorData);
+      throw new Error(errorData.message || 'Failed to fetch search suggestions');
+    }
+
+    const data = await response.json();
+    // console.log('ProductService: Raw response data:', data);
+    
+    const suggestions = data.suggestions || data.data || [];
+    
+    // Ensure each suggestion has a proper _id field
+    const processedSuggestions = suggestions.map((suggestion: any) => ({
+      ...suggestion,
+      _id: suggestion._id || suggestion.id,
+      id: suggestion._id || suggestion.id  
+    }));
+    
+    console.log('ProductService: Processed suggestions:', processedSuggestions);
+    
+    return { data: processedSuggestions };
+  } catch (error) {
+    console.error('ProductService: Error in getSearchSuggestions:', error);
+    return { data: [] };
+  }
+}
 }
 
 export default new ProductService();
