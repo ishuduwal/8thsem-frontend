@@ -33,17 +33,25 @@ export const RecommendedProduct = ({ productId }: RecommendedProductProps) => {
   }, [productId]);
 
   const handleProductClick = (productId: string | undefined) => {
-    if (!productId) return; // Add null check
+    if (!productId) return;
     
     navigate(`/products/${productId}`);
-    // Scroll to top when navigating to new product
     window.scrollTo(0, 0);
   };
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-32">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="bg-white rounded-sm border border-gray-200 overflow-hidden animate-pulse">
+            <div className="h-40 bg-gray-200"></div>
+            <div className="p-4">
+              <div className="h-4 bg-gray-200 rounded-sm mb-2"></div>
+              <div className="h-4 bg-gray-200 rounded-sm w-2/3"></div>
+              <div className="h-6 bg-gray-200 rounded-sm w-1/2 mt-3"></div>
+            </div>
+          </div>
+        ))}
       </div>
     );
   }
@@ -65,43 +73,37 @@ export const RecommendedProduct = ({ productId }: RecommendedProductProps) => {
   }
 
   return (
-    <div className="mt-6">
-      <h3 className="text-xl font-semibold mb-4">You might also like</h3>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {recommendedProducts.map((product) => (
-          <div
-            key={product._id}
-            onClick={() => handleProductClick(product._id)}
-            className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 cursor-pointer border border-gray-200"
-          >
-            <div className="h-60 overflow-hidden p-2">
-              <img
-                src={product.mainImage}
-                alt={product.name}
-                className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-              />
-            </div>
-            <div className="p-4">
-              <h4 className="font-semibold text-lg mb-2 line-clamp-2 hover:text-blue-600">
-                {product.name}
-              </h4>
-              <p className="text-gray-600 text-sm mb-3 line-clamp-2">
-                {product.description}
-              </p>
-              <div className="flex items-center justify-between">
-                <span className="text-xl font-bold text-blue-600">
-                  Rs. {product.price}
+    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+      {recommendedProducts.map((product) => (
+        <div
+          key={product._id}
+          onClick={() => handleProductClick(product._id)}
+          className="bg-white overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 cursor-pointer border border-gray-200"
+        >
+          <div className="h-40 overflow-hidden">
+            <img
+              src={product.mainImage}
+              alt={product.name}
+              className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+            />
+          </div>
+          <div className="p-4">
+            <h4 className="font-medium text-gray-900 line-clamp-2 text-sm">
+              {product.name}
+            </h4>
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-bold">
+                Rs. {product.price}
+              </span>
+              {product.originalPrice && product.originalPrice > product.price && (
+                <span className="text-sm text-gray-500 line-through">
+                  Rs. {product.originalPrice}
                 </span>
-                {product.originalPrice && product.originalPrice > product.price && (
-                  <span className="text-sm text-gray-500 line-through">
-                    Rs. {product.originalPrice}
-                  </span>
-                )}
-              </div>
+              )}
             </div>
           </div>
-        ))}
-      </div>
+        </div>
+      ))}
     </div>
   );
 };
